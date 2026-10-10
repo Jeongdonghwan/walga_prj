@@ -1,0 +1,32 @@
+# -*- coding: utf-8 -*-
+"""환경변수 우선 설정. .env 파일이 있으면 로드한다 (.env.example 참고)."""
+import os
+
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
+
+
+class Config:
+    SECRET_KEY = os.environ.get("SECRET_KEY") or os.urandom(24).hex()
+
+    DB_HOST = os.environ.get("DB_HOST", "127.0.0.1")
+    DB_PORT = int(os.environ.get("DB_PORT", "3306"))
+    DB_NAME = os.environ.get("DB_NAME", "walga")
+    DB_USER = os.environ.get("DB_USER", "root")
+    DB_PASSWORD = os.environ.get("DB_PASSWORD", "")
+
+    ADMIN_ID = os.environ.get("ADMIN_ID")
+    ADMIN_PW = os.environ.get("ADMIN_PW")
+    SITE_URL = os.environ.get("SITE_URL")
+
+    AD_ENABLED = os.environ.get("AD_ENABLED", "0") == "1"
+
+    BEST_THRESHOLD = 20      # 추천 N 도달 시 왈베 승격
+    REPORT_BLIND = 5         # 신고 N건 누적 시 자동 블라인드
+    PER_PAGE = 20
+    MAX_CONTENT_LENGTH = 5 * 1024 * 1024   # 업로드 5MB
+    IMG_MAX_SIDE = 1200
+    UPLOAD_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static", "uploads")

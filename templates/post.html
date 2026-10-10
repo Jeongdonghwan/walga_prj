@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% set nav = p.board %}
+{% block title %}{{ p.title }} — 왈가{% endblock %}
+{% block mtitle %}{{ BOARDS[p.board] }}{% endblock %}
+{% block body %}
+<main class="post">
+{% if blind %}
+  <div class="blindbox">신고 누적으로 블라인드된 글임</div>
+{% else %}
+  <div class="ph">
+    <span class="cat{{ ' best' if p.is_best }}">{{ '왈베' if p.is_best else BOARDS[p.board] }}</span>
+    <h1>{{ p.title }}</h1>
+    <p class="pm"><span class="name">{{ p.nick }}</span> · {{ p.created_at.strftime('%Y.%m.%d %H:%M') }} · 조회 {{ p.view_cnt + 1 }}</p>
+  </div>
+  <div class="pc">
+    {% if p.has_image %}<img src="/static/uploads/{{ p.id }}.jpg" alt="">{% endif %}
+    <p>{{ p.content|nl2br }}</p>
+  </div>
+  <div class="pa">
+    <button class="recbtn" data-rec="post" data-id="{{ p.id }}">추천 <b>{{ p.rec_cnt }}</b></button>
+    <span class="tools">
+      <button data-report="post" data-id="{{ p.id }}">신고</button>
+      {% if can_edit %}<a href="/post/{{ p.id }}/edit">수정</a><button data-del="/post/{{ p.id }}/delete" data-anon="{{ 0 if p.user_id else 1 }}">삭제</button>{% endif %}
+      <a href="/board/{{ p.board }}">목록</a>
+    </span>
+  </div>
+
+  <div class="sh"><h2>댓글 <span class="n">{{ p.cmt_cnt }}</span></h2></div>
+  {% macro cmt(c, reply=False) %}
+  <li class="cmt{{ ' reply' if reply }}" id="c{{ c.id }}">
+    {% if c.status == 0 %}<p class="blind">블라인드된 댓글</p>{% else %}
+    <p class="cm"><b>{{ c.nick }}</b><span>{{ c.created_at|ftime }}</span></p>
+    <p class="cc">{{ c.content|nl2br }}</p>
+    <p class="ca">
+      <button data-rec="comment" data-id="{{ c.id }}">추천 <b>{{ c.rec_cnt }}</b></button>
+      {% if not reply %}<button data-reply="{{ c.id }}" data-nick="{{ c.nick }}">답글</button>{% endif %}
+      <button data-report="comment" data-id="{{ c.id }}">신고</button>
+      {% if not c.user_id or c.user_id == session.uid %}<button data-del="/comment/{{ c.id }}/delete" data-anon="{{ 0 if c.user_id else 1 }}">삭제</button>{% endif %}
+    </p>
+    {% endif %}
+  </li>
+  {% endmacro %}
+  <ul class="cmts">
+    {% for c in comments %}{{ cmt(c) }}{% for r in c.replies %}{{ cmt(r, True) }}{% endfor %}
+    {% else %}<li class="empty">첫 댓글 달아보셈</li>{% endfor %}
+  </ul>
+
+  <form class="cform" method="post" action="/comment">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="target" value="post">
+    <input type="hidden" name="target_id" value="{{ p.id }}">
+    <input type="hidden" name="parent_id" value="">
+    <p class="replyto"><span></span><button type="button" data-reply-cancel>취소</button></p>
+    {% if not nick %}
+    <div class="anon">
+      <input name="nick" placeholder="닉네임" maxlength="12" required>
+      <input name="pw" type="password" inputmode="numeric" placeholder="비밀번호 4자리" maxlength="4" pattern="\d{4}" required>
+    </div>
+    {% endif %}
+    <textarea name="content" rows="3" placeholder="댓글 쓰기" maxlength="2000" required></textarea>
+    <button class="btn">등록</button>
+  </form>
+{% endif %}
+</main>
+{% endblock %}

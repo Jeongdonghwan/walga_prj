@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% set nav = board %}
+{% set h = '글 수정' if edit else '글쓰기' %}
+{% block title %}{{ h }} — 왈가{% endblock %}
+{% block mtitle %}{{ h }}{% endblock %}
+{% block body %}
+<main class="form">
+  <div class="sh"><h2>{{ h }}</h2></div>
+  <form method="post" enctype="multipart/form-data" action="{{ '/post/' ~ p.id ~ '/edit' if edit else '/write' }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    {% if not edit %}
+    <div class="chips sel">{% for k, l in BOARDS.items() %}<label><input type="radio" name="board" value="{{ k }}" {{ 'checked' if board == k }}>{{ l }}</label>{% endfor %}</div>
+    {% endif %}
+    {% if edit and not p.user_id %}
+    <div class="anon"><input name="pw" type="password" inputmode="numeric" placeholder="글 비밀번호 4자리 확인" maxlength="4" pattern="\d{4}" required></div>
+    {% elif not edit and not nick %}
+    <div class="anon">
+      <input name="nick" placeholder="닉네임 (2~12자)" maxlength="12" value="{{ p.nick if p else '' }}" required>
+      <input name="pw" type="password" inputmode="numeric" placeholder="비밀번호 4자리 (수정·삭제용)" maxlength="4" pattern="\d{4}" required>
+    </div>
+    {% endif %}
+    <input name="title" placeholder="제목" maxlength="120" value="{{ p.title if p else '' }}" required>
+    <textarea name="content" rows="14" placeholder="내용" required>{{ p.content if p else '' }}</textarea>
+    <label class="file">이미지 (선택 · 1장 · 5MB 이하){% if edit and p.has_image %} · 새로 올리면 교체됨{% endif %}<input type="file" name="image" accept="image/*"></label>
+    <div class="actions"><a href="{{ '/post/' ~ p.id if edit else '/board/' ~ board }}">취소</a><button class="btn">{{ '수정' if edit else '등록' }}</button></div>
+  </form>
+</main>
+{% endblock %}

@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>왈가 — 오늘의 이슈, 오늘의 민심</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230e7c6f'/%3E%3Cpath d='M14 20a6 6 0 0 1 6-6h24a6 6 0 0 1 6 6v16a6 6 0 0 1-6 6H30l-8 8v-8h-2a6 6 0 0 1-6-6z' fill='%23fff'/%3E%3Crect x='21' y='30' width='9' height='7' rx='1.5' fill='%230e7c6f'/%3E%3Crect x='34' y='23' width='9' height='14' rx='1.5' fill='%23e5493a'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+:root{
+  --bg:#ffffff; --surface:#f5f6f7; --line:#e5e7eb; --line2:#d7dade;
+  --text:#212529; --sub:#616a73; --faint:#98a0a8;
+  --brand:#0e7c6f; --brand-soft:#eaf5f3;
+  --hot:#e5493a;
+  --blue:#3b6ea5;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Pretendard,-apple-system,"Malgun Gothic",sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.4}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+ul{list-style:none}
+
+/* header */
+.hd{border-bottom:1px solid var(--line2)}
+.hd-in{max-width:1080px;margin:0 auto;height:56px;display:flex;align-items:center;gap:22px;padding:0 20px}
+.logo{display:flex;align-items:center;gap:8px;font-weight:800;font-size:20px;letter-spacing:-0.04em;color:var(--brand)}
+.search{flex:1;max-width:360px;position:relative}
+.search input{width:100%;height:34px;border:1px solid var(--line2);border-radius:4px;background:var(--surface);padding:0 34px 0 12px;font-size:13px;font-family:inherit;outline:none}
+.search input:focus{border-color:var(--brand);background:#fff}
+.search svg{position:absolute;right:10px;top:9px}
+.hd-r{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:13px}
+.hd-r .sep{color:var(--line2)}
+.hd-r a{color:var(--sub);padding:4px 6px}
+.hd-r a:hover{color:var(--text)}
+
+/* gnb */
+.gnb{border-bottom:1px solid var(--line2);background:#fff;position:sticky;top:0;z-index:10}
+.gnb-in{max-width:1080px;margin:0 auto;padding:0 20px;display:flex}
+.gnb a{padding:11px 14px;font-size:14.5px;font-weight:600;color:var(--sub);border-bottom:2px solid transparent}
+.gnb a:hover{color:var(--text)}
+.gnb a.on{color:var(--brand);border-color:var(--brand);font-weight:800}
+.gnb .write{margin-left:auto;align-self:center;height:32px;padding:0 14px;background:var(--brand);color:#fff;font-size:13px;font-weight:700;border-radius:4px}
+
+/* layout */
+.wrap{max-width:1080px;margin:0 auto;padding:16px 20px 40px;display:grid;grid-template-columns:1fr 300px;gap:24px;align-items:start}
+
+/* 오늘의 왈가 */
+.main-vs{border:1px solid var(--line2);border-radius:4px;padding:16px;margin-bottom:14px;display:flex;align-items:center;gap:20px}
+.main-vs .body{flex:1;min-width:0}
+.main-vs .lab{font-size:11.5px;font-weight:800;color:var(--brand);letter-spacing:.06em;margin-bottom:5px;display:flex;align-items:center;gap:6px}
+.main-vs .lab .live{width:5px;height:5px;border-radius:50%;background:var(--hot)}
+.main-vs .q{font-size:17px;font-weight:700;line-height:1.35;word-break:keep-all}
+.main-vs .foot{margin-top:6px;font-size:12px;color:var(--faint)}
+.main-vs .btns{flex:none;display:flex;gap:6px}
+.main-vs .btns button{width:96px;height:40px;border:1px solid var(--line2);font-size:14px;font-weight:700;background:#fff;border-radius:4px}
+.main-vs .btns button:hover{background:var(--surface)}
+.main-vs .done{display:none;flex:none;border:1px solid var(--line);background:var(--surface);padding:10px 16px;border-radius:4px;font-size:12.5px;color:var(--sub);text-align:center;line-height:1.5}
+.main-vs.voted .btns{display:none}
+.main-vs.voted .done{display:block}
+
+/* section head */
+.sh{display:flex;align-items:baseline;gap:8px;padding:0 2px 8px;border-bottom:2px solid var(--text)}
+.sh h2{font-size:15.5px;font-weight:800;letter-spacing:-0.02em}
+.sh .date{font-size:12px;color:var(--faint)}
+.sh .more{margin-left:auto;font-size:12px;color:var(--sub)}
+.sh .sorts{margin-left:auto;display:flex;gap:10px;font-size:12.5px}
+.sh .sorts button{color:var(--faint);font-weight:600}
+.sh .sorts button.on{color:var(--text);font-weight:800}
+
+/* 이슈 리스트 */
+.issues{margin-bottom:18px}
+.issues li{display:flex;gap:9px;padding:8px 2px;border-bottom:1px solid var(--line);align-items:baseline}
+.issues .no{flex:none;width:16px;font-size:13.5px;font-weight:800;color:var(--brand)}
+.issues li:nth-child(n+4) .no{color:var(--faint)}
+.issues .t{font-size:14px;font-weight:600;min-width:0;display:flex;align-items:baseline;gap:5px}
+.issues .t .txt{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.issues .t .c{flex:none;color:var(--hot);font-weight:700;font-size:12.5px}
+.issues .m{margin-left:auto;flex:none;font-size:12px;color:var(--faint)}
+.issues .m b{color:var(--sub);font-weight:600}
+
+/* 전체글 리스트 */
+.rows li{display:flex;gap:8px;padding:8px 2px;border-bottom:1px solid var(--line);align-items:baseline}
+.rows .cat{flex:none;width:44px;font-size:12.5px;font-weight:700;color:var(--blue)}
+.rows .cat.best{color:var(--hot)}
+.rows .t{font-size:14px;font-weight:500;min-width:0;display:flex;align-items:baseline;gap:5px}
+.rows .t .txt{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rows .t:hover .txt{text-decoration:underline;text-underline-offset:2px}
+.rows .t .c{flex:none;color:var(--hot);font-weight:700;font-size:12.5px}
+.rows .t .img{flex:none;color:var(--faint);position:relative;top:1px}
+.rows .meta{margin-left:auto;flex:none;display:flex;gap:0;font-size:12px;color:var(--faint)}
+.rows .meta span{width:76px;text-align:right}
+.rows .meta .name{width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--sub)}
+.rows .meta .rec{width:56px;color:var(--brand);font-weight:700}
+
+.paging{display:flex;justify-content:center;gap:2px;padding:18px 0 4px}
+.paging button{min-width:30px;height:30px;padding:0 6px;font-size:13px;font-weight:600;color:var(--sub);border-radius:3px}
+.paging button.on{background:var(--brand);color:#fff}
+.paging button:hover:not(.on){background:var(--surface)}
+
+/* sidebar */
+.side{display:flex;flex-direction:column;gap:14px;position:sticky;top:60px}
+.card{border:1px solid var(--line2);border-radius:4px}
+.card .ch{display:flex;align-items:baseline;padding:10px 12px;border-bottom:1px solid var(--line);font-size:13.5px;font-weight:800}
+.card .ch .date{margin-left:auto;font-size:11.5px;color:var(--faint);font-weight:500}
+.card .cb{padding:6px 12px 10px}
+
+/* 어제의 결과 */
+.res li{padding:8px 0;border-bottom:1px solid var(--line)}
+.res li:last-child{border:none}
+.res .t{font-size:13px;font-weight:600;line-height:1.35;margin-bottom:5px}
+.res .bar{height:15px;display:flex;font-size:10px;font-weight:800;color:#fff;border-radius:2px;overflow:hidden}
+.res .yes{background:var(--brand);display:flex;align-items:center;padding-left:6px}
+.res .no{background:#b0b7bf;flex:1;display:flex;align-items:center;justify-content:flex-end;padding-right:6px}
+.res .m{font-size:11px;color:var(--faint);margin-top:4px;display:flex;justify-content:space-between}
+.res .m .up{color:var(--hot);font-weight:700}
+
+/* 실시간 왈베 */
+.rank li{display:flex;align-items:baseline;gap:8px;padding:5px 0;font-size:13px}
+.rank .no{flex:none;width:14px;font-size:12.5px;font-weight:800;color:var(--brand)}
+.rank li:nth-child(n+4) .no{color:var(--faint)}
+.rank .t{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
+.rank .c{margin-left:auto;flex:none;font-size:11.5px;font-weight:700;color:var(--hot)}
+
+/* streak */
+.streak{display:flex;align-items:center;gap:10px;padding:11px 12px}
+.streak b{font-size:13px;display:block}
+.streak small{font-size:11.5px;color:var(--sub)}
+.streak button{margin-left:auto;height:30px;padding:0 12px;background:var(--brand);color:#fff;font-size:12.5px;font-weight:700;border-radius:4px;flex:none}
+
+/* ad */
+.ad{background:var(--surface);border:1px dashed var(--line2);display:flex;align-items:center;justify-content:center;gap:8px;color:var(--faint)}
+.ad .tag{font-size:9.5px;font-weight:800;letter-spacing:.1em;border:1px solid var(--line2);padding:1px 5px;border-radius:2px}
+.ad .size{font-size:11.5px}
+.ad-infeed{height:90px;margin:10px 0}
+.ad-side{height:250px;border-radius:4px}
+@media(max-width:960px){.wrap{grid-template-columns:1fr}.side{position:static}}
+</style>
+</head>
+<body>
+
+<header class="hd">
+  <div class="hd-in">
+    <a class="logo" href="#">
+      <svg width="26" height="26" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#0e7c6f"/><path d="M14 20a6 6 0 0 1 6-6h24a6 6 0 0 1 6 6v16a6 6 0 0 1-6 6H30l-8 8v-8h-2a6 6 0 0 1-6-6z" fill="#fff"/><rect x="21" y="30" width="9" height="7" rx="1.5" fill="#0e7c6f"/><rect x="34" y="23" width="9" height="14" rx="1.5" fill="#e5493a"/></svg>
+      왈가
+    </a>
+    <div class="search">
+      <input placeholder="검색">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#98a0a8" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+    </div>
+    <div class="hd-r">
+      <a href="#">로그인</a><span class="sep">|</span><a href="#">회원가입</a>
+    </div>
+  </div>
+</header>
+
+<nav class="gnb">
+  <div class="gnb-in">
+    <a href="#" class="on">홈</a>
+    <a href="#">이슈</a>
+    <a href="#">왈가베스트</a>
+    <a href="#">자유</a>
+    <a href="#">유머</a>
+    <button class="write">글쓰기</button>
+  </div>
+</nav>
+
+<div class="wrap">
+  <main>
+    <div class="main-vs" id="mainVs">
+      <div class="body">
+        <p class="lab"><span class="live"></span>오늘의 왈가 · 9월 15일</p>
+        <p class="q">주 4일제 도입, 월급 10% 깎여도 찬성?</p>
+        <p class="foot">5,318명 참여 중 · 결과 23:59 공개 · 투표하면 토론 참여 가능</p>
+      </div>
+      <div class="btns">
+        <button onclick="voteMain()">찬성</button>
+        <button onclick="voteMain()">반대</button>
+      </div>
+      <div class="done">투표 완료<br>결과는 밤 11시 59분 공개</div>
+    </div>
+
+    <div class="sh"><h2>오늘의 이슈</h2><span class="date">매일 아침 8시 갱신</span><a class="more" href="#">전체</a></div>
+    <ul class="issues">
+      <li><span class="no">1</span><a class="t" href="#"><span class="txt">여야 추경 협상 이틀째 결렬, 쟁점 정리해봄</span><span class="c">[214]</span></a><span class="m"><b>투표 중</b> · 참여 2,847</span></li>
+      <li><span class="no">2</span><a class="t" href="#"><span class="txt">한은 또 금리 동결. 대출 있는 사람들 어떻게 봄?</span><span class="c">[156]</span></a><span class="m"><b>투표 중</b> · 참여 1,932</span></li>
+      <li><span class="no">3</span><a class="t" href="#"><span class="txt">청년 주거지원안 다음주 발표 예정, 기대 vs 글쎄</span><span class="c">[98]</span></a><span class="m"><b>투표 중</b> · 참여 1,204</span></li>
+      <li><span class="no">4</span><a class="t" href="#"><span class="txt">국회의원 정수 축소론 재점화. 이번엔 진짜 될까</span><span class="c">[312]</span></a><span class="m"><b>투표 중</b> · 참여 4,182</span></li>
+      <li><span class="no">5</span><a class="t" href="#"><span class="txt">플랫폼 규제법 공청회 요약. 찬반 논리 둘 다 정리함</span><span class="c">[67]</span></a><span class="m"><b>투표 중</b> · 참여 886</span></li>
+    </ul>
+
+    <div class="sh"><h2>전체글</h2>
+      <div class="sorts"><button class="on">최신</button><button>왈베</button><button>댓글순</button></div>
+    </div>
+    <ul class="rows">
+      <li><span class="cat best">왈베</span><a class="t" href="#"><span class="txt">회사 단톡방에 사표 잘못 보낸 사람 업데이트함</span><span class="c">[238]</span>
+        <span class="img"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="18" height="18" rx="2.5"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg></span></a>
+        <span class="meta"><span class="name">짤줍는사람</span><span>14:22</span><span class="rec">추천 214</span></span></li>
+      <li><span class="cat">자유</span><a class="t" href="#"><span class="txt">다들 점심값 얼마까지 씀? 만원 넘으면 좀 그런가</span><span class="c">[211]</span></a>
+        <span class="meta"><span class="name">점심난민</span><span>14:19</span><span class="rec">추천 67</span></span></li>
+      <li><span class="cat">유머</span><a class="t" href="#"><span class="txt">배달비 아까워서 픽업 갔다가 생긴 일</span><span class="c">[64]</span>
+        <span class="img"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="18" height="18" rx="2.5"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg></span></a>
+        <span class="meta"><span class="name">도보10분</span><span>14:11</span><span class="rec">추천 142</span></span></li>
+      <li><span class="cat">자유</span><a class="t" href="#"><span class="txt">퇴근하고 아무것도 하기 싫은 거 정상임?</span><span class="c">[147]</span></a>
+        <span class="meta"><span class="name">퇴근요정</span><span>14:05</span><span class="rec">추천 38</span></span></li>
+      <li><span class="cat">자유</span><a class="t" href="#"><span class="txt">월급 280 저축 포트폴리오 피드백 받고 수정했다</span><span class="c">[96]</span></a>
+        <span class="meta"><span class="name">재테크초보</span><span>13:52</span><span class="rec">추천 187</span></span></li>
+
+      <li style="border:none;padding:0"><div class="ad ad-infeed" style="width:100%"><span class="tag">AD</span><span class="size">인피드 광고 · 반응형</span></div></li>
+
+      <li><span class="cat">자유</span><a class="t" href="#"><span class="txt">소개팅에서 더치페이 얘기 먼저 꺼내는 거 어떰</span><span class="c">[184]</span></a>
+        <span class="meta"><span class="name">솔로3년차</span><span>13:40</span><span class="rec">추천 92</span></span></li>
+      <li><span class="cat">유머</span><a class="t" href="#"><span class="txt">ㅋㅋ 우리 팀장 재택인데 상태메시지 실화냐</span><span class="c">[44]</span>
+        <span class="img"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="18" height="18" rx="2.5"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg></span></a>
+        <span class="meta"><span class="name">익명767</span><span>13:31</span><span class="rec">추천 29</span></span></li>
+      <li><span class="cat">자유</span><a class="t" href="#"><span class="txt">축의금 5만원 냈다가 한소리 들은 썰 푼다</span><span class="c">[503]</span></a>
+        <span class="meta"><span class="name">축의금고민</span><span>13:25</span><span class="rec">추천 120</span></span></li>
+      <li><span class="cat">자유</span><a class="t" href="#"><span class="txt">전세 알아보는데 집주인이 이런 말 하는 거 정상?</span><span class="c">[73]</span></a>
+        <span class="meta"><span class="name">이사준비중</span><span>13:10</span><span class="rec">추천 31</span></span></li>
+      <li><span class="cat">유머</span><a class="t" href="#"><span class="txt">국회 회의록에서 발견한 역대급 티키타카</span><span class="c">[128]</span></a>
+        <span class="meta"><span class="name">짤줍는사람</span><span>12:58</span><span class="rec">추천 128</span></span></li>
+      <li><span class="cat">자유</span><a class="t" href="#"><span class="txt">자취 8년차가 말아주는 만원의 행복 장보기</span><span class="c">[87]</span></a>
+        <span class="meta"><span class="name">자취만렙</span><span>12:44</span><span class="rec">추천 119</span></span></li>
+      <li><span class="cat">자유</span><a class="t" href="#"><span class="txt">헬스장 삼대운동 하는 날 vs 하기 싫은 날</span><span class="c">[28]</span></a>
+        <span class="meta"><span class="name">3대백오십</span><span>12:30</span><span class="rec">추천 9</span></span></li>
+    </ul>
+
+    <div class="paging">
+      <button class="on">1</button><button>2</button><button>3</button><button>4</button><button>5</button><button>다음 ›</button>
+    </div>
+  </main>
+
+  <aside class="side">
+    <div class="card">
+      <div class="ch">어제의 결과<span class="date">9월 14일 마감</span></div>
+      <div class="cb">
+        <ul class="res">
+          <li>
+            <p class="t">결혼식 축의금, 5만원이면 충분하다?</p>
+            <div class="bar"><div class="yes" style="width:41%">41%</div><div class="no">59%</div></div>
+            <p class="m"><span>7,047명 참여</span><span class="up">부족 ▲6%p</span></p>
+          </li>
+          <li>
+            <p class="t">국민연금 보험료율 인상, 받아들일 수 있다?</p>
+            <div class="bar"><div class="yes" style="width:33%">33%</div><div class="no">67%</div></div>
+            <p class="m"><span>4,912명 참여</span><span class="up">반대 ▲2%p</span></p>
+          </li>
+          <li>
+            <p class="t">소개팅 첫 만남 더치페이가 맞다?</p>
+            <div class="bar"><div class="yes" style="width:54%">54%</div><div class="no">46%</div></div>
+            <p class="m"><span>2,988명 참여</span><span class="up">맞다 ▲4%p</span></p>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="ch">실시간 왈가베스트</div>
+      <div class="cb">
+        <ul class="rank">
+          <li><span class="no">1</span><a class="t" href="#">회사 단톡방에 사표 잘못 보낸 사람</a><span class="c">[238]</span></li>
+          <li><span class="no">2</span><a class="t" href="#">월급 280 저축 포트폴리오 수정판</a><span class="c">[96]</span></li>
+          <li><span class="no">3</span><a class="t" href="#">9회말 역전 직관 아직도 심장 뜀</a><span class="c">[78]</span></li>
+          <li><span class="no">4</span><a class="t" href="#">배달비 아까워서 픽업 갔다가</a><span class="c">[64]</span></li>
+          <li><span class="no">5</span><a class="t" href="#">국회 회의록 역대급 티키타카</a><span class="c">[128]</span></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="ad ad-side"><span class="tag">AD</span><span class="size">사이드 광고 300×250</span></div>
+
+    <div class="card">
+      <div class="streak">
+        <div><b>연속 투표 12일</b><small>오늘 투표하면 13일차</small></div>
+        <button>오늘의 왈가 참여</button>
+      </div>
+    </div>
+  </aside>
+</div>
+
+<script>
+function voteMain(){document.getElementById('mainVs').classList.add('voted');}
+</script>
+</body>
+</html>

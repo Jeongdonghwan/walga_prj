@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% set nav = 'admin' %}
+{% block title %}신고 관리 — 왈가{% endblock %}
+{% block mtitle %}신고 관리{% endblock %}
+{% block body %}
+<main>
+  <div class="sh"><h2>신고 · 블라인드 관리</h2><span class="date">신고 {{ config.REPORT_BLIND }}건 누적 시 자동 블라인드</span></div>
+  <table class="admin">
+    <tr><th>대상</th><th>내용</th><th>신고</th><th>사유</th><th>상태</th><th></th></tr>
+    {% for i in items %}
+    <tr>
+      <td>{{ '글' if i.target == 'post' else '댓글' }} #{{ i.target_id }}</td>
+      <td>{% if i.target == 'post' %}<a href="/post/{{ i.target_id }}">{{ i.txt }}</a>{% else %}{{ (i.txt or '')[:80] }}{% endif %}</td>
+      <td>{{ i.n }}</td>
+      <td>{{ i.reasons or '' }}</td>
+      <td>{{ '삭제됨' if i.status is none else ('블라인드' if i.status == 0 else '정상') }}</td>
+      <td>{% if i.status is not none %}
+        <form method="post">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="target" value="{{ i.target }}">
+          <input type="hidden" name="target_id" value="{{ i.target_id }}">
+          <input type="hidden" name="status" value="{{ 1 if i.status == 0 else 0 }}">
+          <button class="btn sm">{{ '해제' if i.status == 0 else '블라인드' }}</button>
+        </form>{% endif %}</td>
+    </tr>
+    {% else %}<tr><td colspan="6">신고 없음</td></tr>{% endfor %}
+  </table>
+</main>
+{% endblock %}
