@@ -46,6 +46,7 @@ ul{list-style:none}
 /* layout */
 .wrap{max-width:1080px;margin:0 auto;padding:16px 20px 40px;display:grid;grid-template-columns:1fr 300px;gap:24px;align-items:start}
 .wrap.one{grid-template-columns:1fr}
+.wrap>main{min-width:0}
 .flash{max-width:1080px;margin:12px auto 0;padding:0 20px;color:var(--hot);font-size:13px;font-weight:600}
 
 /* section head */
@@ -63,6 +64,7 @@ ul{list-style:none}
 .rows li{display:flex;gap:8px;padding:8px 2px;border-bottom:1px solid var(--line);align-items:baseline}
 .rows .cat{flex:none;width:44px;font-size:12.5px;font-weight:700;color:var(--blue)}
 .rows .cat.best{color:var(--hot)}
+.rows .cat:empty{visibility:hidden}
 .rows .t{font-size:14px;font-weight:500;min-width:0;display:flex;align-items:baseline;gap:5px}
 .rows .t .txt{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .rows .t:hover .txt{text-decoration:underline;text-underline-offset:2px}
@@ -90,8 +92,8 @@ ul{list-style:none}
 
 /* 글 상세 */
 .post .ph{padding:14px 2px 10px;border-bottom:1px solid var(--line)}
-.post .ph .cat{font-size:12.5px;font-weight:700;color:var(--blue)}
-.post .ph .cat.best{color:var(--hot)}
+.post .ph .cat{font-size:12.5px;font-weight:700;color:var(--blue);display:flex;gap:7px}
+.post .ph .cat .best{color:var(--hot)}
 .post h1{font-size:19px;font-weight:700;line-height:1.35;word-break:keep-all;margin:4px 0 6px}
 .post .pm{font-size:12px;color:var(--faint)}
 .post .pm .name{color:var(--sub);font-weight:600}
@@ -125,6 +127,7 @@ ul{list-style:none}
 .form input:not([type=radio]):not([type=file]),.form textarea,.cform input,.cform textarea{width:100%;border:1px solid var(--line2);border-radius:4px;background:var(--surface);padding:9px 12px;font-size:14px;outline:none;line-height:1.5}
 .form input:focus,.form textarea:focus,.cform input:focus,.cform textarea:focus{border-color:var(--brand);background:#fff}
 .anon{display:flex;gap:8px}
+.anon input{min-width:0;flex:1}
 .btn{height:36px;padding:0 16px;background:var(--brand);color:#fff;font-weight:700;border-radius:4px;font-size:13px;align-self:flex-end;display:inline-flex;align-items:center}
 .btn.sm{height:28px;padding:0 10px;font-size:12px}
 .actions{display:flex;justify-content:flex-end;gap:6px;align-items:center}
@@ -132,11 +135,13 @@ ul{list-style:none}
 .chips.sel{display:flex;gap:14px;border:none;position:static;font-size:14px;padding:2px 0}
 .chips.sel label{display:flex;gap:5px;align-items:center;font-weight:600;cursor:pointer}
 .file{font-size:12.5px;color:var(--sub)}
-.file input{display:block;margin-top:4px;font-size:12px}
+.file input{display:block;margin-top:6px;font-size:12px;color:var(--sub)}
+.file input::file-selector-button{font-family:inherit;height:30px;padding:0 12px;margin-right:8px;border:1px solid var(--line2);border-radius:4px;background:#fff;color:var(--text);font-size:12.5px;font-weight:600;cursor:pointer}
+.file input::file-selector-button:hover{background:var(--surface)}
 .replyto{display:none;font-size:12px;color:var(--brand);font-weight:600;gap:8px;align-items:center}
 .replyto.on{display:flex}
 .replyto button{font-size:11.5px;color:var(--faint)}
-.auth form{max-width:360px}
+.auth{max-width:400px;width:100%;justify-self:center;margin-top:30px}
 .hint{font-size:12.5px;color:var(--sub);padding:0 2px}
 .hint a{color:var(--brand);font-weight:700}
 
@@ -168,14 +173,21 @@ ul{list-style:none}
   .sh{padding:12px 14px 8px;border-bottom:1px solid var(--line2)}
   .sh h2{font-size:15px}
   .notice-row{padding:9px 14px}
+  .sh.pg h2{display:none}
+  .sh.pg{padding:8px 14px;border-bottom:1px solid var(--line)}
+  .sh.pg .sorts{margin-left:0}
+  .sh.pg:not(:has(.sorts)){display:none}
   .rows li{flex-wrap:wrap;padding:9px 14px;gap:3px 7px}
-  .rows .cat{display:none}
-  .rows .t{width:100%}
-  .rows .meta{margin-left:0;gap:7px;font-size:11.5px}
+  .rows .t{order:1;width:100%}
+  .rows .cat{order:2;width:auto;font-size:11.5px}
+  .rows .cat:empty{display:none}
+  .rows .meta{order:3;margin-left:0;gap:7px;font-size:11.5px}
   .rows .meta span,.rows .meta .name{width:auto;text-align:left}
   .ad-infeed{margin:0;height:80px;border-left:none;border-right:none;border-radius:0}
   .paging{padding:14px 0}
   .post{padding:0 14px}
+  .post .sh{padding-left:0;padding-right:0}
+  .auth{margin-top:0}
   .cmts li{padding:10px 14px;margin:0 -14px}
   .cmts li.reply{padding-left:34px}
   .form form,.cform{padding:14px}

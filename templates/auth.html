@@ -5,7 +5,7 @@
 {% block mtitle %}{{ h }}{% endblock %}
 {% block body %}
 <main class="form auth">
-  <div class="sh"><h2>{{ h }}</h2></div>
+  <div class="sh pg"><h2>{{ h }}</h2></div>
   <form method="post">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <input name="nickname" placeholder="닉네임{{ ' (2~12자, 한글·영문·숫자)' if mode == 'signup' }}" maxlength="12" required autofocus>
