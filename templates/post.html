@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_ui.html" import ic with context %}
 {% set nav = p.board %}
 {% block title %}{{ p.title }} — 왈가{% endblock %}
 {% block mtitle %}{{ BOARDS[p.board] }}{% endblock %}
@@ -8,16 +9,21 @@
   <div class="blindbox">신고 누적으로 블라인드된 글임</div>
 {% else %}
   <div class="ph">
-    <p class="cat"><a href="/board/{{ p.board }}">{{ BOARDS[p.board] }}</a>{% if p.is_best %}<span class="best">왈베</span>{% endif %}</p>
+    <p class="cat"><a class="tag" href="/board/{{ p.board }}">{{ BOARDS[p.board] }}</a>{% if p.is_best %}<span class="tag best">왈베</span>{% endif %}</p>
     <h1>{{ p.title }}</h1>
-    <p class="pm"><span class="name">{{ p.nick }}</span> · {{ p.created_at.strftime('%Y.%m.%d %H:%M') }} · 조회 {{ p.view_cnt + 1 }}</p>
+    <div class="pm">
+      <span class="av">{{ p.nick[0] }}</span>
+      <span class="name">{{ p.nick }}</span>
+      <span class="dot">{{ p.created_at.strftime('%Y.%m.%d %H:%M') }}</span>
+      <span class="dot">{{ ic('eye', 13) }}{{ p.view_cnt + 1 }}</span>
+    </div>
   </div>
   <div class="pc">
     {% if p.has_image %}<img src="/static/uploads/{{ p.id }}.jpg" alt="">{% endif %}
     <p>{{ p.content|nl2br }}</p>
   </div>
   <div class="pa">
-    <button class="recbtn" data-rec="post" data-id="{{ p.id }}">추천 <b>{{ p.rec_cnt }}</b></button>
+    <button class="recbtn" data-rec="post" data-id="{{ p.id }}">{{ ic('rec', 16) }}추천 <b>{{ p.rec_cnt }}</b></button>
     <span class="tools">
       <button data-report="post" data-id="{{ p.id }}">신고</button>
       {% if can_edit %}<a href="/post/{{ p.id }}/edit">수정</a><button data-del="/post/{{ p.id }}/delete" data-anon="{{ 0 if p.user_id else 1 }}">삭제</button>{% endif %}
@@ -29,10 +35,10 @@
   {% macro cmt(c, reply=False) %}
   <li class="cmt{{ ' reply' if reply }}" id="c{{ c.id }}">
     {% if c.status == 0 %}<p class="blind">블라인드된 댓글</p>{% else %}
-    <p class="cm"><b>{{ c.nick }}</b><span>{{ c.created_at|ftime }}</span></p>
+    <div class="cm"><span class="av">{{ c.nick[0] }}</span><b>{{ c.nick }}</b><span class="time">{{ c.created_at|ftime }}</span></div>
     <p class="cc">{{ c.content|nl2br }}</p>
     <p class="ca">
-      <button data-rec="comment" data-id="{{ c.id }}">추천 <b>{{ c.rec_cnt }}</b></button>
+      <button data-rec="comment" data-id="{{ c.id }}">{{ ic('rec', 13) }}<b>{{ c.rec_cnt }}</b></button>
       {% if not reply %}<button data-reply="{{ c.id }}" data-nick="{{ c.nick }}">답글</button>{% endif %}
       <button data-report="comment" data-id="{{ c.id }}">신고</button>
       {% if not c.user_id or c.user_id == session.uid %}<button data-del="/comment/{{ c.id }}/delete" data-anon="{{ 0 if c.user_id else 1 }}">삭제</button>{% endif %}
@@ -58,7 +64,7 @@
     </div>
     {% endif %}
     <textarea name="content" rows="3" placeholder="댓글 쓰기" maxlength="2000" required></textarea>
-    <button class="btn">등록</button>
+    <div class="actions"><button class="btn">등록</button></div>
   </form>
 {% endif %}
 </main>

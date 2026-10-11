@@ -5,16 +5,19 @@
 {% block mtitle %}{{ h }}{% endblock %}
 {% block body %}
 <main class="form auth">
-  <div class="sh pg"><h2>{{ h }}</h2></div>
-  <form method="post">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <input name="nickname" placeholder="닉네임{{ ' (2~12자, 한글·영문·숫자)' if mode == 'signup' }}" maxlength="12" required autofocus>
-    <input name="password" type="password" placeholder="비밀번호{{ ' (4자 이상)' if mode == 'signup' }}" required>
-    <button class="btn">{{ h }}</button>
-  </form>
-  <p class="hint">
-    {% if mode == 'signup' %}이미 계정 있음? <a href="/login">로그인</a>
-    {% else %}계정 없음? <a href="/signup">회원가입</a> · 가입 없이도 닉네임만 정하면 글 쓸 수 있음{% endif %}
-  </p>
+  <div class="card">
+    <p class="lt">{{ '왈가 시작하기' if mode == 'signup' else '다시 왔네' }}</p>
+    <p class="ls">{{ '닉네임과 비밀번호만 있으면 끝' if mode == 'signup' else '투표하고 토론하고, 연속 투표로 포인트 쌓기' }}</p>
+    <form method="post">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input name="nickname" placeholder="닉네임{{ ' (2~12자, 한글·영문·숫자)' if mode == 'signup' }}" maxlength="12" required autofocus>
+      <input name="password" type="password" placeholder="비밀번호{{ ' (4자 이상)' if mode == 'signup' }}" required>
+      <button class="btn full">{{ h }}</button>
+    </form>
+    <div class="lrow">
+      {% if mode == 'signup' %}<a href="/login">이미 계정 있음 → 로그인</a>{% else %}<a href="/signup">회원가입</a>{% endif %}
+      <a class="ghost" href="/write?board=free">가입 없이 글쓰기</a>
+    </div>
+  </div>
 </main>
 {% endblock %}

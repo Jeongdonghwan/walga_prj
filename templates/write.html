@@ -9,7 +9,7 @@
   <form method="post" enctype="multipart/form-data" action="{{ '/post/' ~ p.id ~ '/edit' if edit else '/write' }}">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     {% if not edit %}
-    <div class="chips sel">{% for k, l in BOARDS.items() %}<label><input type="radio" name="board" value="{{ k }}" {{ 'checked' if board == k }}>{{ l }}</label>{% endfor %}</div>
+    <div class="chips sel">{% for k, l in BOARDS.items() %}<label><input type="radio" name="board" value="{{ k }}" {{ 'checked' if board == k }}><span>{{ l }}</span></label>{% endfor %}</div>
     {% endif %}
     {% if edit and not p.user_id %}
     <div class="anon"><input name="pw" type="password" inputmode="numeric" placeholder="글 비밀번호 4자리 확인" maxlength="4" pattern="\d{4}" required></div>

@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "_rows.html" import rows with context %}
+{% from "_ui.html" import rows with context %}
 {% set nav = board or 'best' %}
 {% set qs = ('sort=' ~ sort ~ '&') if sort else '' %}
 {% block title %}{{ title }} — 왈가{% endblock %}
@@ -7,8 +7,8 @@
 {% block body %}
 <main>
   {% if board %}
-  <div class="chips"><a href="/board/free" class="{{ 'on' if board == 'free' }}">자유</a><a href="/board/humor" class="{{ 'on' if board == 'humor' }}">유머</a></div>
-  <div class="writebar"><a class="fake" href="/write?board={{ board }}">닉네임만 정하면 바로 글 쓸 수 있음 (가입 없이)</a><a class="btn" href="/write?board={{ board }}">글쓰기</a></div>
+  <div class="chips">{% for k, l in BOARDS.items() %}<a href="/board/{{ k }}" class="{{ 'on' if board == k }}">{{ l }}</a>{% endfor %}</div>
+  <div class="writebar"><a class="fake" href="/write?board={{ board }}">닉네임만 정하면 바로 글 쓸 수 있음</a><a class="btn" href="/write?board={{ board }}">글쓰기</a></div>
   {% endif %}
 
   <div class="sh pg"><h2>{{ title }}</h2>
@@ -21,9 +21,9 @@
 
   {% set s = ((page - 1) // 5) * 5 + 1 %}
   {% if pages > 1 %}<div class="paging">
-    {% if s > 1 %}<a href="?{{ qs }}page={{ s - 1 }}">‹ 이전</a>{% endif %}
+    {% if s > 1 %}<a href="?{{ qs }}page={{ s - 1 }}">‹</a>{% endif %}
     {% for i in range(s, [s + 4, pages]|min + 1) %}<a href="?{{ qs }}page={{ i }}" class="{{ 'on' if i == page }}">{{ i }}</a>{% endfor %}
-    {% if s + 4 < pages %}<a href="?{{ qs }}page={{ s + 5 }}">다음 ›</a>{% endif %}
+    {% if s + 4 < pages %}<a href="?{{ qs }}page={{ s + 5 }}">›</a>{% endif %}
   </div>{% endif %}
 </main>
 {% endblock %}

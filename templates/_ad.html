@@ -1,2 +1,0 @@
-{# 광고 슬롯. AD_ENABLED=0 이면 아무것도 렌더하지 않음 #}
-{% macro ad(cls, label) %}{% if AD_ENABLED %}<div class="ad {{ cls }}"><span class="tag">AD</span><span class="size">{{ label }}</span></div>{% endif %}{% endmacro %}

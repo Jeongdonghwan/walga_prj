@@ -1,12 +1,11 @@
 {% extends "base.html" %}
-{% from "_ad.html" import ad with context %}
-{% from "_rows.html" import rows with context %}
+{% from "_ui.html" import ad, ic, rows with context %}
 {% set nav = 'home' %}
 {% set two_col = True %}
 {% block body %}
 <main>
   {% if main_issue %}
-  <div class="main-vs">
+  <div class="main-vs" id="top">
     <div class="body">
       <p class="lab"><span class="live"></span>오늘의 왈가 · {{ today_label }}</p>
       <p class="q">{{ main_issue.title }}</p>
@@ -16,8 +15,8 @@
     <form class="btns" method="post" action="/vote">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <input type="hidden" name="issue_id" value="{{ main_issue.id }}">
-      <button name="choice" value="1">{{ main_issue.opt_yes }}</button>
-      <button name="choice" value="0">{{ main_issue.opt_no }}</button>
+      <button class="yes" name="choice" value="1">{{ main_issue.opt_yes }}</button>
+      <button class="no" name="choice" value="0">{{ main_issue.opt_no }}</button>
     </form>
   </div>
   {% endif %}
@@ -27,8 +26,8 @@
   <ul class="issues">
     {% for i in issues %}
     <li><span class="no">{{ loop.index }}</span>
-      <a class="t" href="/issue/{{ i.id }}/{{ i.slug or '' }}"><span class="txt">{{ i.title }}</span>{% if i.cmt %}<span class="c">[{{ i.cmt }}]</span>{% endif %}</a>
-      <span class="m"><b>투표 중</b> · 참여 {{ i.part|comma }}</span></li>
+      <a class="t" href="/issue/{{ i.id }}/{{ i.slug or '' }}"><span class="txt">{{ i.title }}</span>{% if i.cmt %}<span class="c">{{ ic('cmt', 13) }}{{ i.cmt }}</span>{% endif %}</a>
+      <span class="m"><b>투표 중</b><span>참여 {{ i.part|comma }}</span></span></li>
     {% endfor %}
   </ul>
   {% endif %}
@@ -40,7 +39,7 @@
       {% for p in best[:3] %}
       <li><span class="rec"><b>{{ p.rec_cnt }}</b><small>추천</small></span>
         <div class="body">
-          <a class="t" href="/post/{{ p.id }}"><span class="txt">{{ p.title }}</span>{% if p.cmt_cnt %}<span class="c">[{{ p.cmt_cnt }}]</span>{% endif %}</a>
+          <a class="t" href="/post/{{ p.id }}"><span class="txt">{{ p.title }}</span>{% if p.cmt_cnt %}<span class="c">{{ ic('cmt', 13) }}{{ p.cmt_cnt }}</span>{% endif %}</a>
           <p class="m"><span class="cat">{{ BOARDS[p.board] }}</span> · {{ p.nick }} · {{ p.created_at|ftime }}</p>
         </div></li>
       {% else %}<li class="empty">아직 왈베 글이 없음</li>{% endfor %}
@@ -56,71 +55,64 @@
     {{ rows(posts, cat='board') }}
     {% if pages > 1 %}{% set s = ((page - 1) // 5) * 5 + 1 %}
     <div class="paging">
-      {% if s > 1 %}<a href="?sort={{ sort }}&page={{ s - 1 }}">‹ 이전</a>{% endif %}
+      {% if s > 1 %}<a href="?sort={{ sort }}&page={{ s - 1 }}">‹</a>{% endif %}
       {% for i in range(s, [s + 4, pages]|min + 1) %}<a href="?sort={{ sort }}&page={{ i }}" class="{{ 'on' if i == page }}">{{ i }}</a>{% endfor %}
-      {% if s + 4 < pages %}<a href="?sort={{ sort }}&page={{ s + 5 }}">다음 ›</a>{% endif %}
+      {% if s + 4 < pages %}<a href="?sort={{ sort }}&page={{ s + 5 }}">›</a>{% endif %}
     </div>{% endif %}
   </div>
 </main>
 
 <aside class="side">
   {% if user %}
-  <div class="card">
-    <div class="profile">
-      <span class="av">{{ user.nickname[0] }}</span>
-      <div><b>{{ user.nickname }}</b><small>왈가력 {{ user.days }}일차 · 포인트 {{ user.points|comma }}P</small></div>
-      <form method="post" action="/logout"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button>로그아웃</button></form>
-    </div>
+  <div class="card profile">
+    <span class="av">{{ user.nickname[0] }}</span>
+    <div class="info"><b>{{ user.nickname }}</b><small>왈가력 {{ user.days }}일차 · {{ user.points|comma }}P</small></div>
+    <form method="post" action="/logout"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button>로그아웃</button></form>
   </div>
   {% else %}
-  <div class="card">
-    <div class="ch">로그인</div>
-    <form class="cb login" method="post" action="/login?next=/">
+  <div class="card login">
+    <p class="lt">왈가 시작하기</p>
+    <p class="ls">투표하고 토론하고, 연속 투표로 포인트 쌓기</p>
+    <form method="post" action="/login?next=/">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <input name="nickname" placeholder="닉네임" maxlength="12" required>
       <input name="password" type="password" placeholder="비밀번호" required>
       <button class="btn full">로그인</button>
-      <p class="links"><a href="/signup">회원가입</a><span>가입 없이도 닉네임만 정하면 글 쓸 수 있음</span></p>
     </form>
+    <div class="lrow"><a href="/signup">회원가입</a><a class="ghost" href="/write?board=free">가입 없이 글쓰기</a></div>
   </div>
   {% endif %}
 
   {% if results %}
   <div class="card">
     <div class="ch">어제의 결과<span class="date">{{ y_label }} 마감</span></div>
-    <div class="cb">
-      <ul class="res">
-        {% for r in results %}
-        <li>
-          <p class="t">{{ r.title }}</p>
-          <div class="bar"><div class="yes" style="width:{{ r.yp }}%">{{ r.yp }}%</div><div class="no">{{ 100 - r.yp }}%</div></div>
-          <p class="m"><span>{{ r.part|comma }}명 참여</span><span class="up">{{ r.opt_yes if r.yp >= 50 else r.opt_no }} ▲{{ (2 * r.yp - 100)|abs }}%p</span></p>
-        </li>
-        {% endfor %}
-      </ul>
-    </div>
+    <ul class="res">
+      {% for r in results %}
+      <li>
+        <p class="t">{{ r.title }}</p>
+        <div class="bar"><div class="yes" style="width:{{ r.yp }}%">{{ r.yp }}%</div><div class="no">{{ 100 - r.yp }}%</div></div>
+        <p class="m"><span>{{ r.part|comma }}명 참여</span><span class="up">{{ r.opt_yes if r.yp >= 50 else r.opt_no }} ▲{{ (2 * r.yp - 100)|abs }}%p</span></p>
+      </li>
+      {% endfor %}
+    </ul>
   </div>
   {% endif %}
 
   {% if best %}
   <div class="card">
     <div class="ch">실시간 왈가베스트</div>
-    <div class="cb">
-      <ul class="rank">
-        {% for p in best %}<li><span class="no">{{ loop.index }}</span><a class="t" href="/post/{{ p.id }}">{{ p.title }}</a>{% if p.cmt_cnt %}<span class="c">[{{ p.cmt_cnt }}]</span>{% endif %}</li>{% endfor %}
-      </ul>
-    </div>
+    <ul class="rank">
+      {% for p in best %}<li><span class="no">{{ loop.index }}</span><a class="t" href="/post/{{ p.id }}">{{ p.title }}</a>{% if p.cmt_cnt %}<span class="c">{{ ic('cmt', 12) }}{{ p.cmt_cnt }}</span>{% endif %}</li>{% endfor %}
+    </ul>
   </div>
   {% endif %}
 
   {{ ad('ad-side', '사이드 광고 300×250') }}
 
   {% if user and main_issue %}
-  <div class="card">
-    <div class="streak">
-      <div><b>연속 투표 {{ user.streak }}일</b><small>오늘 투표하면 {{ user.streak + 1 }}일차</small></div>
-      <a class="btn" href="#top">오늘의 왈가 참여</a>
-    </div>
+  <div class="card streak">
+    <div><b>연속 투표 {{ user.streak }}일</b><small>오늘 투표하면 {{ user.streak + 1 }}일차</small></div>
+    <a class="btn sm" href="#top">오늘의 왈가 참여</a>
   </div>
   {% endif %}
 </aside>

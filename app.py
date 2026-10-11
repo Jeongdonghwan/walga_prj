@@ -20,7 +20,7 @@ import models as m
 from config import Config
 
 KST = ZoneInfo("Asia/Seoul")
-BOARDS = {"free": "자유", "humor": "유머"}
+BOARDS = Config.BOARDS
 SORTS = {"new": "p.id DESC", "best": "p.rec_cnt DESC, p.id DESC", "cmt": "p.cmt_cnt DESC, p.id DESC"}
 NICK_RE = re.compile(r"^[가-힣A-Za-z0-9_]{2,12}$")
 PW4_RE = re.compile(r"^\d{4}$")

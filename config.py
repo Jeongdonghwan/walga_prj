@@ -24,6 +24,10 @@ class Config:
 
     AD_ENABLED = os.environ.get("AD_ENABLED", "0") == "1"
 
+    # 게시판 (키=URL, 값=표시명). 추가·분리는 여기 한 줄. 정치 게시판은 두지 않음 (이슈 댓글로)
+    BOARDS = {"free": "자유", "humor": "유머", "work": "직장", "money": "돈·재테크",
+              "love": "연애·결혼", "sports": "스포츠", "it": "디지털·IT", "life": "일상·생활"}
+
     BEST_THRESHOLD = 20      # 추천 N 도달 시 왈베 승격
     REPORT_BLIND = 5         # 신고 N건 누적 시 자동 블라인드
     PER_PAGE = 20

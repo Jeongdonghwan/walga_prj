@@ -44,7 +44,7 @@ CREATE TABLE IF NOT EXISTS votes (
 
 CREATE TABLE IF NOT EXISTS posts (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  board ENUM('free','humor') NOT NULL,
+  board VARCHAR(20) NOT NULL,             -- config.BOARDS 키,
   user_id INT NULL,
   anon_nick VARCHAR(20) NULL,
   anon_pw_hash VARCHAR(255) NULL,
