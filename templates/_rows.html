@@ -1,0 +1,18 @@
+{# 글 목록 공통. cat: 'board'(왈베 또는 게시판명) | 'best'(왈베 마크만) | 'origin'(게시판명만) | 'none' #}
+{% from "_ad.html" import ad with context %}
+{% macro rows(posts, cat='board', ad_after=5, ad_label='인피드 광고 · 반응형') %}
+<ul class="rows">
+  {% for p in posts %}
+  <li>
+    {% if cat == 'board' %}<span class="cat{{ ' best' if p.is_best }}">{{ '왈베' if p.is_best else BOARDS[p.board] }}</span>
+    {% elif cat == 'best' %}<span class="cat best">{{ '왈베' if p.is_best }}</span>
+    {% elif cat == 'origin' %}<span class="cat">{{ BOARDS[p.board] }}</span>{% endif %}
+    <a class="t" href="/post/{{ p.id }}"><span class="txt">{{ p.title }}</span>{% if p.cmt_cnt %}<span class="c">[{{ p.cmt_cnt }}]</span>{% endif %}{% if p.has_image %}<span class="img"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="18" height="18" rx="2.5"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg></span>{% endif %}</a>
+    <span class="meta"><span class="name">{{ p.nick }}</span><span>{{ p.created_at|ftime }}</span><span class="rec">추천 {{ p.rec_cnt }}</span></span>
+  </li>
+  {% if ad_after and loop.index == ad_after %}<li class="adrow">{{ ad('ad-infeed', ad_label) }}</li>{% endif %}
+  {% else %}
+  <li class="empty">아직 글이 없음. 첫 글 써보셈</li>
+  {% endfor %}
+</ul>
+{% endmacro %}

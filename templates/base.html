@@ -48,7 +48,7 @@
 
 {% with msgs = get_flashed_messages() %}{% if msgs %}<div class="flash">{{ msgs[0] }}</div>{% endif %}{% endwith %}
 
-<div class="wrap one">
+<div class="wrap{{ '' if two_col else ' one' }}">
 {% block body %}{% endblock %}
 </div>
 

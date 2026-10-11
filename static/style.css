@@ -49,6 +49,88 @@ ul{list-style:none}
 .wrap>main{min-width:0}
 .flash{max-width:1080px;margin:12px auto 0;padding:0 20px;color:var(--hot);font-size:13px;font-weight:600}
 
+.pc-only{display:block}
+.m-only{display:none}
+
+/* 오늘의 왈가 */
+.main-vs{border:1px solid var(--line2);border-radius:4px;padding:16px;margin-bottom:14px;display:flex;align-items:center;gap:20px}
+.main-vs .body{flex:1;min-width:0}
+.main-vs .lab{font-size:11.5px;font-weight:800;color:var(--brand);letter-spacing:.06em;margin-bottom:5px;display:flex;align-items:center;gap:6px}
+.main-vs .lab .live{width:5px;height:5px;border-radius:50%;background:var(--hot)}
+.main-vs .q{font-size:17px;font-weight:700;line-height:1.35;word-break:keep-all}
+.main-vs .desc{display:none;font-size:13px;color:var(--sub);line-height:1.5;margin:4px 0 0}
+.main-vs .foot{margin-top:6px;font-size:12px;color:var(--faint);display:flex;gap:6px}
+.main-vs .foot span+span::before{content:"· ";}
+.main-vs .btns{flex:none;display:flex;gap:6px}
+.main-vs .btns button{width:96px;height:40px;border:1px solid var(--line2);font-size:14px;font-weight:700;background:#fff;border-radius:4px}
+.main-vs .btns button:hover{background:var(--surface)}
+
+/* 이슈 리스트 */
+.issues{margin-bottom:18px}
+.issues li{display:flex;gap:9px;padding:8px 2px;border-bottom:1px solid var(--line);align-items:baseline}
+.issues .no{flex:none;width:16px;font-size:13.5px;font-weight:800;color:var(--brand)}
+.issues li:nth-child(n+4) .no{color:var(--faint)}
+.issues .t{font-size:14px;font-weight:600;min-width:0;display:flex;align-items:baseline;gap:5px}
+.issues .t .txt{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.issues .t .c{flex:none;color:var(--hot);font-weight:700;font-size:12.5px}
+.issues .m{margin-left:auto;flex:none;font-size:12px;color:var(--faint)}
+.issues .m b{color:var(--sub);font-weight:600}
+
+/* 왈베 rows (추천박스형, 모바일 홈) */
+.best li{display:flex;gap:10px;padding:9px 14px;border-bottom:1px solid var(--line);align-items:center}
+.best .rec{flex:none;width:40px;height:40px;border:1px solid var(--line2);border-radius:4px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.best .rec b{font-size:14px;font-weight:800;color:var(--hot)}
+.best .rec small{font-size:9px;color:var(--faint);font-weight:600}
+.best .body{min-width:0;flex:1}
+.best .t{font-size:14px;font-weight:600;line-height:1.35;display:flex;align-items:baseline;gap:4px}
+.best .t .txt{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.best .t .c{flex:none;color:var(--hot);font-weight:700;font-size:12.5px}
+.best .m{font-size:11.5px;color:var(--faint);margin-top:3px}
+.best .m .cat{color:var(--blue);font-weight:600}
+.best .empty{color:var(--faint);font-size:13px;justify-content:center;padding:20px}
+
+/* sidebar */
+.side{display:flex;flex-direction:column;gap:14px;position:sticky;top:60px}
+.card{border:1px solid var(--line2);border-radius:4px}
+.card .ch{display:flex;align-items:baseline;padding:10px 12px;border-bottom:1px solid var(--line);font-size:13.5px;font-weight:800}
+.card .ch .date{margin-left:auto;font-size:11.5px;color:var(--faint);font-weight:500}
+.card .cb{padding:6px 12px 10px}
+.card .login{display:flex;flex-direction:column;gap:6px;padding:12px}
+.card .login input{width:100%;height:34px;border:1px solid var(--line2);border-radius:4px;background:var(--surface);padding:0 10px;font-size:13px;outline:none}
+.card .login input:focus{border-color:var(--brand);background:#fff}
+.btn.full{width:100%;align-self:stretch;justify-content:center;height:34px}
+.card .login .links{display:flex;flex-direction:column;gap:2px;font-size:11.5px;color:var(--faint);margin-top:2px}
+.card .login .links a{color:var(--brand);font-weight:700;font-size:12.5px}
+.profile{display:flex;align-items:center;gap:12px;padding:12px}
+.profile .av{width:40px;height:40px;border-radius:4px;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;flex:none}
+.profile b{font-size:14px;display:block}
+.profile small{font-size:11.5px;color:var(--sub)}
+.profile form{margin-left:auto}
+.profile button{font-size:12px;color:var(--faint)}
+
+/* 어제의 결과 */
+.res li{padding:8px 0;border-bottom:1px solid var(--line)}
+.res li:last-child{border:none}
+.res .t{font-size:13px;font-weight:600;line-height:1.35;margin-bottom:5px}
+.res .bar{height:15px;display:flex;font-size:10px;font-weight:800;color:#fff;border-radius:2px;overflow:hidden}
+.res .yes{background:var(--brand);display:flex;align-items:center;padding-left:6px}
+.res .no{background:#b0b7bf;flex:1;display:flex;align-items:center;justify-content:flex-end;padding-right:6px}
+.res .m{font-size:11px;color:var(--faint);margin-top:4px;display:flex;justify-content:space-between}
+.res .m .up{color:var(--hot);font-weight:700}
+
+/* 실시간 왈베 */
+.rank li{display:flex;align-items:baseline;gap:8px;padding:5px 0;font-size:13px}
+.rank .no{flex:none;width:14px;font-size:12.5px;font-weight:800;color:var(--brand)}
+.rank li:nth-child(n+4) .no{color:var(--faint)}
+.rank .t{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
+.rank .c{margin-left:auto;flex:none;font-size:11.5px;font-weight:700;color:var(--hot)}
+
+/* streak */
+.streak{display:flex;align-items:center;gap:10px;padding:11px 12px}
+.streak b{font-size:13px;display:block}
+.streak small{font-size:11.5px;color:var(--sub)}
+.streak .btn{margin-left:auto;height:30px;padding:0 12px;font-size:12.5px;flex:none}
+
 /* section head */
 .sh{display:flex;align-items:baseline;gap:8px;padding:0 2px 8px;border-bottom:2px solid var(--text)}
 .sh h2{font-size:15.5px;font-weight:800;letter-spacing:-0.02em}
@@ -169,6 +251,21 @@ ul{list-style:none}
   .chips{display:flex}
   .writebar{display:flex}
   .wrap{padding:0 0 76px;grid-template-columns:1fr;gap:0}
+  .side{display:none}
+  .pc-only{display:none}
+  .m-only{display:block}
+  .main-vs{border:none;border-bottom:8px solid var(--surface);border-radius:0;padding:14px;margin:0;display:block}
+  .main-vs .q{font-size:16.5px;line-height:1.4;margin-bottom:4px}
+  .main-vs .desc{display:block;margin:0 0 12px}
+  .main-vs .btns{display:flex;margin-top:0}
+  .main-vs .btns button{flex:1;width:auto}
+  .main-vs .foot{margin-top:9px;justify-content:space-between}
+  .main-vs .foot span+span::before{content:none}
+  .issues{margin:0}
+  .issues li{flex-wrap:wrap;padding:10px 14px;gap:3px 9px;align-items:flex-start}
+  .issues .t{flex:1;min-width:0;white-space:normal}
+  .issues .t .txt{white-space:normal;overflow:visible}
+  .issues .m{margin-left:24px;flex-basis:100%;font-size:11.5px}
   .flash{padding:8px 14px;margin:0;background:#fff5f4;border-bottom:1px solid var(--line)}
   .sh{padding:12px 14px 8px;border-bottom:1px solid var(--line2)}
   .sh h2{font-size:15px}

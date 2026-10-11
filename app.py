@@ -4,7 +4,7 @@ import hashlib
 import os
 import re
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 from functools import wraps
 from zoneinfo import ZoneInfo
 
@@ -124,6 +124,11 @@ def ftime(dt):
     return dt.strftime("%H:%M") if dt.date() == now_kst().date() else dt.strftime("%m.%d")
 
 
+@app.template_filter("comma")
+def comma(n):
+    return f"{n or 0:,}"
+
+
 @app.context_processor
 def _ctx():
     return {"BOARDS": BOARDS, "nick": session.get("nick"), "AD_ENABLED": app.config["AD_ENABLED"]}
@@ -135,11 +140,32 @@ def paging(total):
     return page, (page - 1) * per, max(1, -(-total // per))
 
 
-# ─── 홈 (Phase 3 전까지 임시) ──────────────────────────────
+# ─── 홈 ─────────────────────────────────────────────────
 
 @app.get("/")
 def home():
-    return redirect(url_for("board", board="free"))
+    today = now_kst().date()
+    yday = today - timedelta(days=1)
+    # 핵심 규칙 1: 진행 중 이슈는 참여자 수만 — yes_cnt/no_cnt 자체를 템플릿에 넘기지 않음
+    open_cols = "id, title, summary, opt_yes, opt_no, slug, yes_cnt+no_cnt part"
+    main_issue = m.one(f"SELECT {open_cols} FROM issues WHERE open_date=%s AND is_main=1 AND closed=0 LIMIT 1", (today,))
+    issues = m.rows(f"SELECT {open_cols}, (SELECT COUNT(*) FROM comments c WHERE c.target='issue' AND c.target_id=issues.id) cmt "
+                    "FROM issues WHERE open_date=%s AND is_main=0 AND closed=0 ORDER BY id LIMIT 5", (today,))
+    results = m.rows("SELECT *, yes_cnt+no_cnt part FROM issues WHERE closed=1 AND open_date=%s "
+                     "ORDER BY is_main DESC, yes_cnt+no_cnt DESC LIMIT 3", (yday,))
+    for r in results:
+        r["yp"] = round(r["yes_cnt"] * 100 / r["part"]) if r["part"] else 50
+    best = m.rows(f"{POST_SQL} WHERE p.is_best=1 AND p.status=1 ORDER BY p.best_at DESC, p.id DESC LIMIT 5")
+    free = m.rows(f"{POST_SQL} WHERE p.board='free' AND p.status=1 ORDER BY p.id DESC LIMIT 5")
+    sort = request.args.get("sort", "new")
+    total = m.one("SELECT COUNT(*) n FROM posts WHERE status=1")["n"]
+    page, off, pages = paging(total)
+    posts = m.rows(f"{POST_SQL} WHERE p.status=1 ORDER BY {SORTS.get(sort, SORTS['new'])} LIMIT %s OFFSET %s",
+                   (app.config["PER_PAGE"], off))
+    user = m.one("SELECT *, DATEDIFF(CURDATE(), created_at)+1 days FROM users WHERE id=%s", (session["uid"],)) if session.get("uid") else None
+    return render_template("home.html", main_issue=main_issue, issues=issues, results=results, best=best, free=free,
+                           posts=posts, sort=sort, page=page, pages=pages, user=user,
+                           today_label=f"{today.month}월 {today.day}일", y_label=f"{yday.month}월 {yday.day}일")
 
 
 # ─── 회원 ───────────────────────────────────────────────
