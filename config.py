@@ -29,6 +29,9 @@ class Config:
               "love": "연애·결혼", "sports": "스포츠", "it": "디지털·IT", "life": "일상·생활"}
 
     BEST_THRESHOLD = 20      # 추천 N 도달 시 왈베 승격
+    POINTS_WIN = 10          # 마감 시 다수파 적중 포인트
+    AUTO_PUBLISH = os.environ.get("AUTO_PUBLISH", "0") == "1"   # 자동 생성 이슈를 승인 없이 바로 게시
+    ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
     REPORT_BLIND = 5         # 신고 N건 누적 시 자동 블라인드
     PER_PAGE = 20
     MAX_CONTENT_LENGTH = 5 * 1024 * 1024   # 업로드 5MB

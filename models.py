@@ -38,3 +38,10 @@ def run(sql, args=()):
     cur = get_db().cursor()
     cur.execute(sql, args)
     return cur.lastrowid
+
+
+def affect(sql, args=()):
+    """UPDATE/DELETE 영향 행 수 (동시 요청에서 '딱 한 번' 보장용)."""
+    cur = get_db().cursor()
+    cur.execute(sql, args)
+    return cur.rowcount

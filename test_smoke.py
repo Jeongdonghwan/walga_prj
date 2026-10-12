@@ -85,8 +85,43 @@ anon.post("/admin/blind", headers=auth, data={"target": "post", "target_id": 1, 
 assert db("SELECT status FROM posts WHERE id=1")[0] == 1
 
 # 7. 이슈 댓글은 투표자만 (핵심 규칙 2)
-db("INSERT INTO issues(title, open_date) VALUES('이슈', CURDATE())")
+db("INSERT INTO issues(title, open_date, is_main, slug) VALUES('이슈', CURDATE(), 1, 'issue-1')")
 assert anon.post("/comment", data={"target": "issue", "target_id": 1, "content": "x", "nick": "a", "pw": "1234"}).status_code == 403
+assert anon.get("/issue/1").status_code == 301  # slug 캐노니컬
+html = anon.get("/issue/1/issue-1").get_data(as_text=True)
+assert "토론에 참여할 수 있음" in html and "%" not in html.split('<main')[1].split('토론')[0], "진행 중엔 결과 숨김"
+
+# 8. 투표: 중복 차단, 투표 후 댓글 허용, 홈 '투표 완료' 상태, 집계 비공개 유지 (핵심 규칙 1)
+assert anon.post("/vote", data={"issue_id": 1, "choice": 1}).status_code == 302
+assert "이미 투표함" in anon.post("/vote", data={"issue_id": 1, "choice": 0}, follow_redirects=True).get_data(as_text=True)
+assert anon.post("/comment", data={"target": "issue", "target_id": 1, "content": "토론", "nick": "a", "pw": "1234"}).status_code == 302
+html = anon.get("/issue/1/issue-1").get_data(as_text=True)
+assert "투표 완료" in html and "토론" in html and "%" not in html.split('class="vbox"')[1].split('</div>')[0]
+assert "투표 완료" in anon.get("/").get_data(as_text=True)
+assert db("SELECT yes_cnt, no_cnt FROM issues WHERE id=1") == (1, 0)
+assert user.post("/vote", data={"issue_id": 1, "choice": 1}).status_code == 302
+assert db("SELECT streak, last_vote_date=CURDATE() FROM users WHERE id=1") == (1, 1)
+assert db("SELECT COUNT(*) FROM attendance WHERE user_id=1")[0] == 1
+
+# 9. 지연 마감: 날짜가 지나면 다음 요청에서 닫히고 다수파(+10P) 지급, 결과 공개
+db("UPDATE issues SET open_date=CURDATE()-INTERVAL 1 DAY WHERE id=1")
+html = anon.get("/issue").get_data(as_text=True)
+assert db("SELECT closed FROM issues WHERE id=1")[0] == 1
+assert db("SELECT points FROM users WHERE id=1")[0] == 10
+assert "100%" in html and "다수파" in html
+html = anon.get("/issue/1/issue-1").get_data(as_text=True)
+assert "찬성 100%" in html and "적중" in html
+assert "마감된 이슈임" in client("late").post("/vote", data={"issue_id": 1, "choice": 0}, follow_redirects=True).get_data(as_text=True)
+assert db("SELECT points FROM users WHERE id=1")[0] == 10, "마감 재실행 시 중복 지급 없음"
+
+# 10. 어드민 이슈 등록·메인 지정·승인 대기 비노출
+assert anon.get("/admin/issues", headers=auth).status_code == 200
+anon.post("/admin/issues", headers=auth, data={"title": "새 이슈", "summary": "요약", "opt_yes": "찬성", "opt_no": "반대", "is_main": "on", "approved": "on"})
+anon.post("/admin/issues", headers=auth, data={"title": "대기 이슈"})  # approved 미체크 → 0
+assert db("SELECT COUNT(*) FROM issues WHERE is_main=1 AND open_date=CURDATE()")[0] == 1
+html = anon.get("/").get_data(as_text=True)
+assert "새 이슈" in html and "대기 이슈" not in html
+assert anon.get("/issue/3").status_code == 404
 
 # 8. 삭제: 비밀번호 틀림 403, 맞으면 삭제 / 회원 글은 본인만
 assert anon.post("/comment/1/delete", data={"pw": "9999"}).status_code == 403

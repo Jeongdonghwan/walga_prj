@@ -140,21 +140,72 @@ def paging(total):
     return page, (page - 1) * per, max(1, -(-total // per))
 
 
+def safe_back(default):
+    """같은 사이트의 referrer만 되돌아감."""
+    r = request.referrer or ""
+    return r if r.startswith(request.host_url) else default
+
+
+# ─── 이슈 공통 ───────────────────────────────────────────
+
+ISSUE_OPEN_COLS = "id, title, summary, category, is_main, opt_yes, opt_no, open_date, slug, closed, yes_cnt+no_cnt part"
+ISSUE_CMT = "(SELECT COUNT(*) FROM comments c WHERE c.target='issue' AND c.target_id=issues.id) cmt"
+
+
+def slugify(t):
+    return re.sub(r"[^\w가-힣]+", "-", t).strip("-")[:80] or "issue"
+
+
+def with_yp(rows):
+    """마감 이슈 행에 참여수(part)·찬성 비율(yp)·다수파 라벨(maj) 추가."""
+    for r in rows:
+        part = r["yes_cnt"] + r["no_cnt"]
+        r["part"] = part
+        r["yp"] = round(r["yes_cnt"] * 100 / part) if part else 50
+        r["maj"] = None if r["yes_cnt"] == r["no_cnt"] else (r["opt_yes"] if r["yes_cnt"] > r["no_cnt"] else r["opt_no"])
+    return rows
+
+
+def close_issue(i):
+    """이슈 1건 마감 확정 + 다수파 투표자 포인트 지급. 동시 요청은 rowcount로 한 번만."""
+    if m.affect("UPDATE issues SET closed=1 WHERE id=%s AND closed=0", (i["id"],)) != 1:
+        return
+    if i["yes_cnt"] != i["no_cnt"]:
+        m.run("UPDATE users u JOIN votes v ON v.user_id=u.id SET u.points=u.points+%s WHERE v.issue_id=%s AND v.choice=%s",
+              (app.config["POINTS_WIN"], i["id"], 1 if i["yes_cnt"] > i["no_cnt"] else 0))
+    make_card(i["id"])
+
+
+def close_due_issues():
+    """지연 마감: open_date가 지난(=23:59 경과) 이슈를 요청 시점에 닫음. 타이머 없음."""
+    for i in m.rows("SELECT id, yes_cnt, no_cnt FROM issues WHERE closed=0 AND open_date<%s", (now_kst().date(),)):
+        close_issue(i)
+
+
+def make_card(iid):
+    """Phase 4: 공유용 결과 카드 이미지."""
+
+
+def my_vote(iid):
+    uid, ah = ident()
+    v = m.one("SELECT choice FROM votes WHERE issue_id=%s AND (user_id=%s OR anon_hash=%s)", (iid, uid, ah))
+    return v["choice"] if v else None
+
+
 # ─── 홈 ─────────────────────────────────────────────────
 
 @app.get("/")
 def home():
+    close_due_issues()
     today = now_kst().date()
     yday = today - timedelta(days=1)
     # 핵심 규칙 1: 진행 중 이슈는 참여자 수만 — yes_cnt/no_cnt 자체를 템플릿에 넘기지 않음
-    open_cols = "id, title, summary, opt_yes, opt_no, slug, yes_cnt+no_cnt part"
-    main_issue = m.one(f"SELECT {open_cols} FROM issues WHERE open_date=%s AND is_main=1 AND closed=0 LIMIT 1", (today,))
-    issues = m.rows(f"SELECT {open_cols}, (SELECT COUNT(*) FROM comments c WHERE c.target='issue' AND c.target_id=issues.id) cmt "
-                    "FROM issues WHERE open_date=%s AND is_main=0 AND closed=0 ORDER BY id LIMIT 5", (today,))
-    results = m.rows("SELECT *, yes_cnt+no_cnt part FROM issues WHERE closed=1 AND open_date=%s "
-                     "ORDER BY is_main DESC, yes_cnt+no_cnt DESC LIMIT 3", (yday,))
-    for r in results:
-        r["yp"] = round(r["yes_cnt"] * 100 / r["part"]) if r["part"] else 50
+    main_issue = m.one(f"SELECT {ISSUE_OPEN_COLS} FROM issues WHERE open_date=%s AND is_main=1 AND closed=0 AND approved=1 LIMIT 1", (today,))
+    issues = m.rows(f"SELECT {ISSUE_OPEN_COLS}, {ISSUE_CMT} FROM issues WHERE open_date=%s AND is_main=0 AND closed=0 AND approved=1 "
+                    "ORDER BY id LIMIT 5", (today,))
+    results = with_yp(m.rows("SELECT * FROM issues WHERE closed=1 AND open_date=%s AND approved=1 "
+                             "ORDER BY is_main DESC, yes_cnt+no_cnt DESC LIMIT 3", (yday,)))
+    main_voted = my_vote(main_issue["id"]) if main_issue else None
     best = m.rows(f"{POST_SQL} WHERE p.is_best=1 AND p.status=1 ORDER BY p.best_at DESC, p.id DESC LIMIT 5")
     free = m.rows(f"{POST_SQL} WHERE p.board='free' AND p.status=1 ORDER BY p.id DESC LIMIT 5")
     sort = request.args.get("sort", "new")
@@ -163,9 +214,79 @@ def home():
     posts = m.rows(f"{POST_SQL} WHERE p.status=1 ORDER BY {SORTS.get(sort, SORTS['new'])} LIMIT %s OFFSET %s",
                    (app.config["PER_PAGE"], off))
     user = m.one("SELECT *, DATEDIFF(CURDATE(), created_at)+1 days FROM users WHERE id=%s", (session["uid"],)) if session.get("uid") else None
-    return render_template("home.html", main_issue=main_issue, issues=issues, results=results, best=best, free=free,
-                           posts=posts, sort=sort, page=page, pages=pages, user=user,
+    return render_template("home.html", main_issue=main_issue, main_voted=main_voted, issues=issues, results=results,
+                           best=best, free=free, posts=posts, sort=sort, page=page, pages=pages, user=user,
                            today_label=f"{today.month}월 {today.day}일", y_label=f"{yday.month}월 {yday.day}일")
+
+
+# ─── 이슈 · 투표 ─────────────────────────────────────────
+
+@app.get("/issue")
+def issue_list():
+    close_due_issues()
+    today = now_kst().date()
+    yday = today - timedelta(days=1)
+    open_issues = m.rows(f"SELECT {ISSUE_OPEN_COLS}, {ISSUE_CMT} FROM issues WHERE open_date=%s AND closed=0 AND approved=1 "
+                         "ORDER BY is_main DESC, id", (today,))
+    yres = with_yp(m.rows(f"SELECT *, {ISSUE_CMT} FROM issues WHERE closed=1 AND open_date=%s AND approved=1 "
+                          "ORDER BY is_main DESC, yes_cnt+no_cnt DESC", (yday,)))
+    total = m.one("SELECT COUNT(*) n FROM issues WHERE closed=1 AND open_date<%s AND approved=1", (yday,))["n"]
+    page, off, pages = paging(total)
+    archive = with_yp(m.rows("SELECT * FROM issues WHERE closed=1 AND open_date<%s AND approved=1 "
+                             "ORDER BY open_date DESC, is_main DESC, id DESC LIMIT %s OFFSET %s", (yday, app.config["PER_PAGE"], off)))
+    return render_template("issues.html", open_issues=open_issues, yres=yres, archive=archive, page=page, pages=pages,
+                           today_label=f"{today.month}월 {today.day}일", y_label=f"{yday.month}월 {yday.day}일")
+
+
+@app.get("/issue/<int:iid>")
+@app.get("/issue/<int:iid>/<slug>")
+def issue(iid, slug=None):
+    close_due_issues()
+    i = m.one("SELECT * FROM issues WHERE id=%s AND approved=1", (iid,))
+    if not i:
+        abort(404)
+    if i["slug"] and slug != i["slug"]:
+        return redirect(url_for("issue", iid=iid, slug=i["slug"]), 301)
+    m.run("UPDATE issues SET view_cnt=view_cnt+1 WHERE id=%s", (iid,))
+    if i["closed"]:
+        with_yp([i])
+    else:
+        i["part"] = i["yes_cnt"] + i["no_cnt"]
+        i["yes_cnt"] = i["no_cnt"] = None  # 핵심 규칙 1: 진행 중엔 집계 비공개
+    mine = my_vote(iid)
+    comments = load_comments("issue", iid)
+    cmt_n = m.one("SELECT COUNT(*) n FROM comments WHERE target='issue' AND target_id=%s", (iid,))["n"]
+    return render_template("issue.html", i=i, mine=mine, comments=comments, cmt_n=cmt_n, can_comment=mine is not None)
+
+
+@app.post("/vote")
+def vote():
+    close_due_issues()
+    iid, choice = request.form.get("issue_id", type=int), request.form.get("choice", type=int)
+    if choice not in (0, 1):
+        abort(400)
+    i = m.one("SELECT id, closed, slug FROM issues WHERE id=%s AND approved=1", (iid,))
+    if not i:
+        abort(404)
+    back = safe_back(url_for("issue", iid=iid, slug=i["slug"]))
+    if i["closed"]:
+        flash("마감된 이슈임")
+        return redirect(back)
+    uid, ah = ident()
+    try:
+        m.run("INSERT INTO votes(issue_id, user_id, anon_hash, choice) VALUES(%s,%s,%s,%s)", (iid, uid, ah, choice))
+    except pymysql.err.IntegrityError:
+        flash("이미 투표함")
+        return redirect(back)
+    col = "yes_cnt" if choice else "no_cnt"
+    m.run(f"UPDATE issues SET {col}={col}+1 WHERE id=%s", (iid,))
+    if uid:  # 스트릭·출석: 어제 투표했으면 +1, 오늘 이미 했으면 유지, 아니면 1
+        today = now_kst().date()
+        m.run("INSERT IGNORE INTO attendance(user_id, date) VALUES(%s,%s)", (uid, today))
+        m.run("UPDATE users SET streak=CASE WHEN last_vote_date=%s THEN streak WHEN last_vote_date=%s THEN streak+1 ELSE 1 END, "
+              "last_vote_date=%s WHERE id=%s", (today, today - timedelta(days=1), today, uid))
+    flash("투표 완료. 결과는 밤 11시 59분에 공개됨")
+    return redirect(back)
 
 
 # ─── 회원 ───────────────────────────────────────────────
@@ -322,10 +443,11 @@ def comment():
             abort(404)
         back = url_for("post", pid=tid)
     elif target == "issue":  # 핵심 규칙 2: 투표자만 댓글
-        uid, ah = ident()
-        if not m.one("SELECT 1 FROM votes WHERE issue_id=%s AND (user_id=%s OR anon_hash=%s)", (tid, uid, ah)):
+        if not m.one("SELECT 1 FROM issues WHERE id=%s AND approved=1", (tid,)):
+            abort(404)
+        if my_vote(tid) is None:
             abort(403)
-        back = request.referrer or url_for("home")
+        back = url_for("issue", iid=tid)
     else:
         abort(400)
     try:
@@ -399,6 +521,60 @@ def report():
 
 
 # ─── 어드민 ─────────────────────────────────────────────
+
+@app.route("/admin", methods=["GET"])
+@admin_required
+def admin():
+    return redirect(url_for("admin_issues"))
+
+
+@app.route("/admin/issues", methods=["GET", "POST"])
+@admin_required
+def admin_issues():
+    if request.method == "POST":
+        f = request.form
+        iid = f.get("id", type=int)
+        title = f.get("title", "").strip()[:200]
+        if not title:
+            flash("제목은 필수")
+            return redirect(url_for("admin_issues"))
+        vals = (title, f.get("summary", "").strip(), f.get("category", "").strip()[:20] or None,
+                1 if f.get("is_main") else 0, f.get("opt_yes", "").strip()[:30] or "찬성", f.get("opt_no", "").strip()[:30] or "반대",
+                f.get("open_date") or now_kst().date(), 1 if f.get("approved") else 0, slugify(title))
+        if iid:
+            m.run("UPDATE issues SET title=%s, summary=%s, category=%s, is_main=%s, opt_yes=%s, opt_no=%s, open_date=%s, approved=%s, slug=%s "
+                  "WHERE id=%s", vals + (iid,))
+        else:
+            iid = m.run("INSERT INTO issues(title, summary, category, is_main, opt_yes, opt_no, open_date, approved, slug) "
+                        "VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s)", vals)
+        if vals[3]:  # 오늘의 왈가는 하루 1개
+            m.run("UPDATE issues SET is_main=0 WHERE open_date=%s AND id<>%s", (vals[6], iid))
+        return redirect(url_for("admin_issues"))
+    edit_id = request.args.get("edit", type=int)
+    edit = m.one("SELECT * FROM issues WHERE id=%s", (edit_id,)) if edit_id else None
+    issues = m.rows("SELECT *, yes_cnt+no_cnt part FROM issues ORDER BY open_date DESC, is_main DESC, id DESC LIMIT 60")
+    return render_template("admin/issues.html", issues=issues, edit=edit, today=now_kst().date())
+
+
+@app.post("/admin/issues/<int:iid>/<action>")
+@admin_required
+def admin_issue_action(iid, action):
+    i = m.one("SELECT * FROM issues WHERE id=%s", (iid,))
+    if not i:
+        abort(404)
+    if action == "delete":
+        m.run("DELETE FROM votes WHERE issue_id=%s", (iid,))
+        m.run("DELETE FROM comments WHERE target='issue' AND target_id=%s", (iid,))
+        m.run("DELETE FROM issues WHERE id=%s", (iid,))
+    elif action == "approve":
+        m.run("UPDATE issues SET approved=1 WHERE id=%s", (iid,))
+    elif action == "main":
+        m.run("UPDATE issues SET is_main=IF(id=%s, 1, 0) WHERE open_date=%s", (iid, i["open_date"]))
+    elif action == "close":
+        close_issue(i)
+    elif action == "reopen":
+        m.run("UPDATE issues SET closed=0 WHERE id=%s", (iid,))
+    return redirect(url_for("admin_issues"))
 
 @app.route("/admin/blind", methods=["GET", "POST"])
 @admin_required

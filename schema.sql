@@ -26,8 +26,9 @@ CREATE TABLE IF NOT EXISTS issues (
   no_cnt INT NOT NULL DEFAULT 0,
   view_cnt INT NOT NULL DEFAULT 0,
   slug VARCHAR(200),
+  approved TINYINT NOT NULL DEFAULT 1,         -- 자동 생성 이슈는 0 (admin 승인 대기)
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  INDEX idx_open (open_date, closed)
+  INDEX idx_open (open_date, closed, approved)
 ) CHARACTER SET utf8mb4;
 
 CREATE TABLE IF NOT EXISTS votes (

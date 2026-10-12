@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% set nav = 'admin' %}
+{% block title %}이슈 관리 — 왈가{% endblock %}
+{% block mtitle %}이슈 관리{% endblock %}
+{% block body %}
+<main class="form admin-page">
+  <div class="atabs"><a class="on" href="/admin/issues">이슈 관리</a><a href="/admin/blind">신고 관리</a></div>
+
+  <div class="sh"><h2>{{ '이슈 수정 #' ~ edit.id if edit else '이슈 등록' }}</h2>{% if edit %}<a class="more" href="/admin/issues">새로 등록</a>{% endif %}</div>
+  <form method="post" action="/admin/issues">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    {% if edit %}<input type="hidden" name="id" value="{{ edit.id }}">{% endif %}
+    <input name="title" placeholder="제목 (커뮤 말투, '~했음' 체)" maxlength="200" value="{{ edit.title if edit else '' }}" required>
+    <textarea name="summary" rows="4" placeholder="요약 (2~3문장)">{{ edit.summary if edit else '' }}</textarea>
+    <div class="anon">
+      <input name="category" placeholder="카테고리 (정치/경제/사회/일상…)" maxlength="20" value="{{ edit.category or '' if edit else '' }}">
+      <input name="opt_yes" placeholder="찬성 라벨 (기본: 찬성)" maxlength="30" value="{{ edit.opt_yes if edit else '' }}">
+      <input name="opt_no" placeholder="반대 라벨 (기본: 반대)" maxlength="30" value="{{ edit.opt_no if edit else '' }}">
+      <input name="open_date" type="date" value="{{ edit.open_date if edit else today }}" required>
+    </div>
+    <div class="checks">
+      <label><input type="checkbox" name="is_main" {{ 'checked' if edit and edit.is_main }}> 오늘의 왈가 (하루 1개)</label>
+      <label><input type="checkbox" name="approved" {{ 'checked' if (not edit) or edit.approved }}> 게시 승인</label>
+    </div>
+    <div class="actions"><button class="btn">{{ '수정' if edit else '등록' }}</button></div>
+  </form>
+
+  <div class="sh"><h2>이슈 목록</h2><span class="date">최근 60개</span></div>
+  <table class="admin">
+    <tr><th>날짜</th><th>제목</th><th>참여</th><th>상태</th><th></th></tr>
+    {% for i in issues %}
+    <tr class="{{ 'pending' if not i.approved }}">
+      <td>{{ i.open_date }}</td>
+      <td><a href="/issue/{{ i.id }}">{{ i.title }}</a>{% if i.is_main %} <span class="tag best">메인</span>{% endif %}</td>
+      <td>{{ i.part }}{% if i.closed %} ({{ i.yes_cnt }}:{{ i.no_cnt }}){% endif %}</td>
+      <td>{{ '승인 대기' if not i.approved else ('마감' if i.closed else '진행') }}</td>
+      <td class="acts">
+        <a href="/admin/issues?edit={{ i.id }}">수정</a>
+        {% for act, label in [('approve', '승인'), ('main', '메인'), ('close', '마감'), ('reopen', '재개'), ('delete', '삭제')] %}
+        {% if (act == 'approve' and not i.approved) or (act == 'main' and not i.is_main) or (act == 'close' and not i.closed) or (act == 'reopen' and i.closed) or act == 'delete' %}
+        <form method="post" action="/admin/issues/{{ i.id }}/{{ act }}" {% if act == 'delete' %}onsubmit="return confirm('삭제? 투표·댓글도 같이 지워짐')"{% endif %}><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button>{{ label }}</button></form>
+        {% endif %}
+        {% endfor %}
+      </td>
+    </tr>
+    {% else %}<tr><td colspan="5">이슈 없음</td></tr>{% endfor %}
+  </table>
+</main>
+{% endblock %}

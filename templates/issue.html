@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% from "_ui.html" import ic, comment_box with context %}
+{% set nav = 'issue' %}
+{% block title %}{{ i.title }} — 왈가{% endblock %}
+{% block mtitle %}{{ '오늘의 왈가' if i.is_main else '이슈' }}{% endblock %}
+{% block head %}
+<meta name="description" content="{{ (i.summary or i.title)[:150] }}">
+<meta property="og:title" content="{{ i.title }}">
+<meta property="og:description" content="{% if i.closed %}{{ i.opt_yes }} {{ i.yp }}% vs {{ i.opt_no }} {{ 100 - i.yp }}% · {{ i.part|comma }}명 참여{% else %}{{ i.part|comma }}명 참여 중 · 결과 23:59 공개{% endif %}">
+<meta property="og:url" content="{{ request.url }}">
+{% if i.closed and card %}<meta property="og:image" content="{{ card }}">{% endif %}
+{% endblock %}
+{% block body %}
+<main class="issue">
+  <div class="ih">
+    <p class="lab">{% if i.is_main %}<span class="live"></span>오늘의 왈가{% else %}이슈{% endif %} · {{ i.open_date.month }}월 {{ i.open_date.day }}일{% if i.category %} · {{ i.category }}{% endif %}{% if i.closed %} · <span class="closed">마감</span>{% endif %}</p>
+    <h1>{{ i.title }}</h1>
+    {% if i.summary %}<p class="summary">{{ i.summary|nl2br }}</p>{% endif %}
+  </div>
+
+  <div class="vbox">
+    {% if i.closed %}
+    <div class="gauge big"><div class="yes" style="width:{{ i.yp }}%">{{ i.opt_yes }} {{ i.yp }}%</div><div class="no">{{ i.opt_no }} {{ 100 - i.yp }}%</div></div>
+    <p class="vm">
+      <span>{{ i.part|comma }}명 참여 · {% if i.maj %}다수파 <b>{{ i.maj }}</b>{% else %}동률{% endif %}</span>
+      {% if mine is not none %}<span>내 선택: {{ i.opt_yes if mine else i.opt_no }}{% if i.maj %} · <b class="{{ 'hit' if (i.maj == i.opt_yes) == (mine == 1) else 'miss' }}">{{ '적중' if (i.maj == i.opt_yes) == (mine == 1) else '빗나감' }}</b>{% endif %}</span>{% endif %}
+    </p>
+    {% elif mine is not none %}
+    <div class="done"><b>{{ ic('check', 16) }}투표 완료</b><span>{{ i.opt_yes if mine else i.opt_no }}에 투표함 · 결과는 밤 11시 59분에 공개됨</span></div>
+    <p class="vm"><span>{{ i.part|comma }}명 참여 중</span><span>결과 23:59 공개</span></p>
+    {% else %}
+    <form class="btns" method="post" action="/vote">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="issue_id" value="{{ i.id }}">
+      <button class="yes" name="choice" value="1">{{ i.opt_yes }}</button>
+      <button class="no" name="choice" value="0">{{ i.opt_no }}</button>
+    </form>
+    <p class="vm"><span>{{ i.part|comma }}명 참여 중</span><span>결과 23:59 공개 · 투표하면 토론 참여 가능</span></p>
+    {% endif %}
+  </div>
+
+  <div class="sh"><h2>토론 <span class="n">{{ cmt_n }}</span></h2></div>
+  {{ comment_box('issue', i.id, comments, can_comment, '투표한 사람만 토론에 참여할 수 있음. 읽는 건 누구나 가능') }}
+</main>
+{% endblock %}

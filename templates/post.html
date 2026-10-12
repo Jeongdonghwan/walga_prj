@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "_ui.html" import ic with context %}
+{% from "_ui.html" import ic, comment_box with context %}
 {% set nav = p.board %}
 {% block title %}{{ p.title }} — 왈가{% endblock %}
 {% block mtitle %}{{ BOARDS[p.board] }}{% endblock %}
@@ -32,40 +32,7 @@
   </div>
 
   <div class="sh"><h2>댓글 <span class="n">{{ p.cmt_cnt }}</span></h2></div>
-  {% macro cmt(c, reply=False) %}
-  <li class="cmt{{ ' reply' if reply }}" id="c{{ c.id }}">
-    {% if c.status == 0 %}<p class="blind">블라인드된 댓글</p>{% else %}
-    <div class="cm"><span class="av">{{ c.nick[0] }}</span><b>{{ c.nick }}</b><span class="time">{{ c.created_at|ftime }}</span></div>
-    <p class="cc">{{ c.content|nl2br }}</p>
-    <p class="ca">
-      <button data-rec="comment" data-id="{{ c.id }}">{{ ic('rec', 13) }}<b>{{ c.rec_cnt }}</b></button>
-      {% if not reply %}<button data-reply="{{ c.id }}" data-nick="{{ c.nick }}">답글</button>{% endif %}
-      <button data-report="comment" data-id="{{ c.id }}">신고</button>
-      {% if not c.user_id or c.user_id == session.uid %}<button data-del="/comment/{{ c.id }}/delete" data-anon="{{ 0 if c.user_id else 1 }}">삭제</button>{% endif %}
-    </p>
-    {% endif %}
-  </li>
-  {% endmacro %}
-  <ul class="cmts">
-    {% for c in comments %}{{ cmt(c) }}{% for r in c.replies %}{{ cmt(r, True) }}{% endfor %}
-    {% else %}<li class="empty">첫 댓글 달아보셈</li>{% endfor %}
-  </ul>
-
-  <form class="cform" method="post" action="/comment">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <input type="hidden" name="target" value="post">
-    <input type="hidden" name="target_id" value="{{ p.id }}">
-    <input type="hidden" name="parent_id" value="">
-    <p class="replyto"><span></span><button type="button" data-reply-cancel>취소</button></p>
-    {% if not nick %}
-    <div class="anon">
-      <input name="nick" placeholder="닉네임" maxlength="12" required>
-      <input name="pw" type="password" inputmode="numeric" placeholder="비밀번호 4자리" maxlength="4" pattern="\d{4}" required>
-    </div>
-    {% endif %}
-    <textarea name="content" rows="3" placeholder="댓글 쓰기" maxlength="2000" required></textarea>
-    <div class="actions"><button class="btn">등록</button></div>
-  </form>
+  {{ comment_box('post', p.id, comments) }}
 {% endif %}
 </main>
 {% endblock %}

@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% from "_ui.html" import ad, ic with context %}
+{% set nav = 'issue' %}
+{% block title %}이슈 — 왈가{% endblock %}
+{% block mtitle %}이슈{% endblock %}
+{% block body %}
+<main>
+  <div class="sh"><h2>진행 중 투표</h2><span class="date">{{ today_label }} · 결과 23:59 공개</span></div>
+  <ul class="issues">
+    {% for i in open_issues %}
+    <li><span class="no">{{ loop.index }}</span>
+      <a class="t" href="/issue/{{ i.id }}/{{ i.slug or '' }}"><span class="txt">{{ i.title }}</span>{% if i.cmt %}<span class="c">{{ ic('cmt', 13) }}{{ i.cmt }}</span>{% endif %}</a>
+      <span class="m">{% if i.is_main %}<b>오늘의 왈가</b>{% endif %}<span>참여 {{ i.part|comma }}</span></span></li>
+    {% else %}<li class="empty">오늘 이슈가 아직 안 올라옴</li>{% endfor %}
+  </ul>
+
+  <div class="sh"><h2>어제의 결과</h2><span class="date">{{ y_label }} 마감</span></div>
+  <ul class="results">
+    {% for r in yres %}
+    <li>
+      <a class="t" href="/issue/{{ r.id }}/{{ r.slug or '' }}"><span class="txt">{{ r.title }}</span>{% if r.cmt %}<span class="c">{{ ic('cmt', 13) }}{{ r.cmt }}</span>{% endif %}</a>
+      <div class="gauge"><div class="yes" style="width:{{ r.yp }}%">{{ r.opt_yes }} {{ r.yp }}%</div><div class="no">{{ r.opt_no }} {{ 100 - r.yp }}%</div></div>
+      <p class="m">{{ r.part|comma }}명 참여 · {% if r.maj %}다수파: <b>{{ r.maj }}</b>{% else %}동률{% endif %}</p>
+    </li>
+    {% else %}<li class="empty">어제 마감된 이슈 없음</li>{% endfor %}
+  </ul>
+
+  {{ ad('ad-infeed', '중간 광고 · 반응형') }}
+
+  <div class="sh"><h2>지난 왈가 아카이브</h2></div>
+  <ul class="archive">
+    {% for r in archive %}
+    <li><a class="t" href="/issue/{{ r.id }}/{{ r.slug or '' }}"><span class="date">{{ r.open_date.month }}월 {{ r.open_date.day }}일</span><span class="txt">{{ r.title }}</span><span class="ratio"><em>{{ r.yp }}</em>:{{ 100 - r.yp }}</span></a></li>
+    {% else %}<li class="empty">아직 없음</li>{% endfor %}
+  </ul>
+  {% if pages > 1 %}{% set s = ((page - 1) // 5) * 5 + 1 %}
+  <div class="paging">
+    {% if s > 1 %}<a href="?page={{ s - 1 }}">‹</a>{% endif %}
+    {% for i in range(s, [s + 4, pages]|min + 1) %}<a href="?page={{ i }}" class="{{ 'on' if i == page }}">{{ i }}</a>{% endfor %}
+    {% if s + 4 < pages %}<a href="?page={{ s + 5 }}">›</a>{% endif %}
+  </div>{% endif %}
+</main>
+{% endblock %}

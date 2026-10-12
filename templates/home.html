@@ -12,12 +12,16 @@
       {% if main_issue.summary %}<p class="desc">{{ main_issue.summary }}</p>{% endif %}
       <p class="foot"><span>{{ main_issue.part|comma }}명 참여 중</span><span>결과 23:59 공개 · 투표하면 토론 참여 가능</span></p>
     </div>
+    {% if main_voted is not none %}
+    <a class="done" href="/issue/{{ main_issue.id }}/{{ main_issue.slug or '' }}"><b>{{ ic('check', 15) }}투표 완료</b><span>결과는 밤 11시 59분 공개 · 토론 참여하기 ›</span></a>
+    {% else %}
     <form class="btns" method="post" action="/vote">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <input type="hidden" name="issue_id" value="{{ main_issue.id }}">
       <button class="yes" name="choice" value="1">{{ main_issue.opt_yes }}</button>
       <button class="no" name="choice" value="0">{{ main_issue.opt_no }}</button>
     </form>
+    {% endif %}
   </div>
   {% endif %}
 

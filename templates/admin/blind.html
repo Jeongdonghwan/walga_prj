@@ -3,7 +3,8 @@
 {% block title %}신고 관리 — 왈가{% endblock %}
 {% block mtitle %}신고 관리{% endblock %}
 {% block body %}
-<main>
+<main class="admin-page">
+  <div class="atabs"><a href="/admin/issues">이슈 관리</a><a class="on" href="/admin/blind">신고 관리</a></div>
   <div class="sh"><h2>신고 · 블라인드 관리</h2><span class="date">신고 {{ config.REPORT_BLIND }}건 누적 시 자동 블라인드</span></div>
   <table class="admin">
     <tr><th>대상</th><th>내용</th><th>신고</th><th>사유</th><th>상태</th><th></th></tr>
