@@ -13,7 +13,7 @@
 {% block body %}
 <main class="issue">
   <div class="ih">
-    <p class="lab">{% if i.is_main %}<span class="live"></span>오늘의 왈가{% else %}이슈{% endif %} · {{ i.open_date.month }}월 {{ i.open_date.day }}일{% if i.category %} · {{ i.category }}{% endif %}{% if i.closed %} · <span class="closed">마감</span>{% endif %}</p>
+    <p class="lab">{% if i.is_main %}{% if not i.closed %}<span class="live"></span>{% endif %}오늘의 왈가{% else %}이슈{% endif %} · {{ i.open_date.month }}월 {{ i.open_date.day }}일{% if i.category %} · {{ i.category }}{% endif %}{% if i.closed %} · <span class="closed">마감</span>{% endif %}</p>
     <h1>{{ i.title }}</h1>
     {% if i.summary %}<p class="summary">{{ i.summary|nl2br }}</p>{% endif %}
   </div>
