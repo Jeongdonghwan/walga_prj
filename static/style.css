@@ -408,7 +408,10 @@ ul{list-style:none}
   .lockbox{margin:12px 0}
   .my{padding:0 16px}
   .my .card.profile{margin-top:14px}
+  .my .sh,.my .rows li{padding-left:0;padding-right:0}
+  .card.profile button{white-space:nowrap}
   .pwform{flex-direction:column}
+  .pwform input{flex:none;width:100%}
   .pwform .btn{align-self:stretch}
   .searchpg .lockbox,.searchpg .rows li,.searchpg .archive .t{margin-left:16px;margin-right:16px;padding-left:0;padding-right:0}
   .issues{margin:0}
