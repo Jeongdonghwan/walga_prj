@@ -6,7 +6,10 @@ import re
 import uuid
 from datetime import datetime, timedelta
 from functools import wraps
-from zoneinfo import ZoneInfo
+try:
+    from zoneinfo import ZoneInfo
+except ImportError:  # 서버 python 3.8 대비
+    from backports.zoneinfo import ZoneInfo
 
 import pymysql
 from flask import (Flask, Response, abort, flash, g, jsonify, redirect,
