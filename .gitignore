@@ -3,5 +3,6 @@ venv/
 __pycache__/
 static/uploads/*
 !static/uploads/.gitkeep
-static/cards/
 static/cache/
+static/cards/*
+!static/cards/.gitkeep

@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% from "_ui.html" import ic, rows with context %}
+{% set nav = 'search' %}
+{% block title %}{{ q ~ ' 검색 — 왈가' if q else '검색 — 왈가' }}{% endblock %}
+{% block mtitle %}검색{% endblock %}
+{% block body %}
+<main class="searchpg">
+  <form class="search m-only" action="/search">
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+    <input name="q" value="{{ q }}" placeholder="관심 있는 내용을 검색해보셈" autofocus>
+  </form>
+  {% if q|length < 2 %}
+  <div class="lockbox">두 글자 이상 입력하셈</div>
+  {% else %}
+  <div class="sh"><h2>"{{ q }}" 검색 결과</h2><span class="date">글 {{ posts|length }} · 이슈 {{ issues|length }}</span></div>
+  {% if issues %}
+  <ul class="archive">
+    {% for i in issues %}
+    <li><a class="t" href="/issue/{{ i.id }}/{{ i.slug or '' }}"><span class="date">{{ i.open_date.month }}월 {{ i.open_date.day }}일</span><span class="txt">{{ i.title }}</span><span class="ratio">{% if i.closed %}<em>{{ i.yp }}</em>:{{ 100 - i.yp }}{% else %}투표 중{% endif %}</span></a></li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+  {{ rows(posts, cat='board', ad_after=0) }}
+  {% endif %}
+</main>
+{% endblock %}

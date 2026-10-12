@@ -8,7 +8,7 @@
 {% macro cmt(c, reply=False) %}
 <li class="cmt{{ ' reply' if reply }}" id="c{{ c.id }}">
   {% if c.status == 0 %}<p class="blind">블라인드된 댓글</p>{% else %}
-  <div class="cm"><span class="av">{{ c.nick[0] }}</span><b>{{ c.nick }}</b><span class="time">{{ c.created_at|ftime }}</span></div>
+  <div class="cm"><span class="av c{{ c.nick|avc }}">{{ c.nick[0] }}</span><b>{{ c.nick }}</b>{% if c.user_id %}<span class="lv">Lv.{{ c.upts|lv }}</span>{% endif %}<span class="time">{{ c.created_at|ftime }}</span></div>
   <p class="cc">{{ c.content|nl2br }}</p>
   <p class="ca">
     <button data-rec="comment" data-id="{{ c.id }}">{{ ic('rec', 13) }}<b>{{ c.rec_cnt }}</b></button>

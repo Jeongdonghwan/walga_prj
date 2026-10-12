@@ -312,3 +312,42 @@ Press CTRL+C to quit
 127.0.0.1 - - [12/Oct/2026 16:55:07] "GET /static/style.css HTTP/1.1" 304 -
 127.0.0.1 - - [12/Oct/2026 16:55:07] "GET /static/app.js HTTP/1.1" 304 -
 127.0.0.1 - - [12/Oct/2026 16:55:08] "GET /admin/issues HTTP/1.1" 401 -
+ * Detected change in 'C:\\side_Prj\\walga_prj\\app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 103-551-591
+ * Detected change in 'C:\\side_Prj\\walga_prj\\app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 103-551-591
+ * Detected change in 'C:\\side_Prj\\walga_prj\\app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 103-551-591
+ * Detected change in 'C:\\side_Prj\\walga_prj\\app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 103-551-591
+ * Detected change in 'C:\\side_Prj\\walga_prj\\test_smoke.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 103-551-591
+ * Detected change in 'C:\\side_Prj\\walga_prj\\test_smoke.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 103-551-591
+ * Detected change in 'C:\\side_Prj\\walga_prj\\config.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 103-551-591
+ * Detected change in 'C:\\side_Prj\\walga_prj\\app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 103-551-591
+ * Detected change in 'C:\\side_Prj\\walga_prj\\app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 103-551-591
+127.0.0.1 - - [12/Oct/2026 17:06:19] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [12/Oct/2026 17:06:19] "GET /static/app.js HTTP/1.1" 304 -
+127.0.0.1 - - [12/Oct/2026 17:06:19] "GET /static/style.css HTTP/1.1" 200 -

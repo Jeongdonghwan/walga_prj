@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% from "_ui.html" import ic, rows with context %}
+{% set nav = 'my' %}
+{% block title %}마이 — 왈가{% endblock %}
+{% block mtitle %}마이{% endblock %}
+{% block body %}
+<main class="my">
+  <div class="card profile">
+    <span class="av c{{ u.nickname|avc }}">{{ u.nickname[0] }}</span>
+    <div class="info"><b>{{ u.nickname }} <span class="lv">Lv.{{ u.points|lv }}</span></b><small>왈가력 {{ u.days }}일차 · {{ u.points|comma }}P{% if gap %} · 다음 레벨까지 {{ gap }}P{% else %} · 최고 레벨{% endif %}</small></div>
+    <form method="post" action="/logout"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button>로그아웃</button></form>
+  </div>
+  <div class="stats3">
+    <div><b>{{ u.streak }}일</b><small>연속 투표</small></div>
+    <div><b>{{ st.total }}회</b><small>투표 참여</small></div>
+    <div><b>{{ hit_rate ~ '%' if hit_rate is not none else '-' }}</b><small>다수파 적중</small></div>
+  </div>
+
+  <div class="sh"><h2>내 투표 히스토리</h2><span class="date">최근 30개</span></div>
+  <ul class="vhist">
+    {% for v in votes %}
+    <li><a class="t" href="/issue/{{ v.id }}/{{ v.slug or '' }}">
+      <span class="date">{{ v.open_date.month }}.{{ v.open_date.day }}</span>
+      <span class="txt">{{ v.title }}</span>
+      <span class="pick">{{ v.opt_yes if v.choice else v.opt_no }}</span>
+      <span class="st {{ {'적중': 'hit', '빗나감': 'miss'}.get(v.st, '') }}">{{ v.st }}</span>
+    </a></li>
+    {% else %}<li class="empty">아직 투표 없음. <a href="/issue">오늘 이슈 보러 가기</a></li>{% endfor %}
+  </ul>
+
+  <div class="sh"><h2>내가 쓴 글</h2></div>
+  {{ rows(posts, cat='board', ad_after=0) }}
+
+  <div class="sh"><h2>내가 쓴 댓글</h2></div>
+  <ul class="mycmts">
+    {% for c in cmts %}
+    <li><a href="/{{ 'post' if c.target == 'post' else 'issue' }}/{{ c.target_id }}#c{{ c.id }}">
+      <span class="cc">{{ c.content|truncate(80) }}</span>
+      <span class="m">{{ c.ttl or '(삭제된 글)' }} · {{ c.created_at|ftime }}</span>
+    </a></li>
+    {% else %}<li class="empty">아직 댓글 없음</li>{% endfor %}
+  </ul>
+
+  <div class="sh"><h2>계정 관리</h2></div>
+  <form class="pwform" method="post" action="/my/password">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input name="cur" type="password" placeholder="현재 비밀번호" required>
+    <input name="new" type="password" placeholder="새 비밀번호 (4자 이상)" required>
+    <button class="btn">비밀번호 변경</button>
+  </form>
+</main>
+{% endblock %}

@@ -30,6 +30,7 @@ class Config:
 
     BEST_THRESHOLD = 20      # 추천 N 도달 시 왈베 승격
     POINTS_WIN = 10          # 마감 시 다수파 적중 포인트
+    LEVELS = (0, 50, 150, 400, 1000, 2500)   # 누적 포인트 → Lv.1~6 (회원만)
     AUTO_PUBLISH = os.environ.get("AUTO_PUBLISH", "0") == "1"   # 자동 생성 이슈를 승인 없이 바로 게시
     ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
     REPORT_BLIND = 5         # 신고 N건 누적 시 자동 블라인드

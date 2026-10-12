@@ -12,8 +12,8 @@
     <p class="cat"><a class="tag" href="/board/{{ p.board }}">{{ BOARDS[p.board] }}</a>{% if p.is_best %}<span class="tag best">왈베</span>{% endif %}</p>
     <h1>{{ p.title }}</h1>
     <div class="pm">
-      <span class="av">{{ p.nick[0] }}</span>
-      <span class="name">{{ p.nick }}</span>
+      <span class="av c{{ p.nick|avc }}">{{ p.nick[0] }}</span>
+      <span class="name">{{ p.nick }}</span>{% if p.user_id %}<span class="lv">Lv.{{ p.upts|lv }}</span>{% endif %}
       <span class="dot">{{ p.created_at.strftime('%Y.%m.%d %H:%M') }}</span>
       <span class="dot">{{ ic('eye', 13) }}{{ p.view_cnt + 1 }}</span>
     </div>

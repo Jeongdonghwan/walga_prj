@@ -69,8 +69,8 @@
 <aside class="side">
   {% if user %}
   <div class="card profile">
-    <span class="av">{{ user.nickname[0] }}</span>
-    <div class="info"><b>{{ user.nickname }}</b><small>왈가력 {{ user.days }}일차 · {{ user.points|comma }}P</small></div>
+    <span class="av c{{ user.nickname|avc }}">{{ user.nickname[0] }}</span>
+    <div class="info"><b>{{ user.nickname }} <span class="lv">Lv.{{ user.points|lv }}</span></b><small>왈가력 {{ user.days }}일차 · {{ user.points|comma }}P</small></div>
     <form method="post" action="/logout"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button>로그아웃</button></form>
   </div>
   {% else %}

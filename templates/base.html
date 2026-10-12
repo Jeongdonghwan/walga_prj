@@ -24,7 +24,7 @@
     </form>
     <div class="hd-r">
       {% if nick %}
-      <a class="me" href="/my"><span class="av">{{ nick[0] }}</span>{{ nick }}</a>
+      <a class="me" href="/my"><span class="av c{{ nick|avc }}">{{ nick[0] }}</span>{{ nick }}</a>
       <form method="post" action="/logout"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button>로그아웃</button></form>
       {% else %}
       <a class="btn-login" href="/login">로그인</a>
@@ -46,7 +46,7 @@
 
 <div class="top">
   {% if nav == 'home' %}<a class="logo" href="/">{{ LOGO }}왈가</a>{% else %}<span class="title">{% block mtitle %}왈가{% endblock %}</span>{% endif %}
-  <span class="r">{% if nick %}<a class="av" href="/my">{{ nick[0] }}</a>{% else %}<a class="btn-login" href="/login">로그인</a>{% endif %}</span>
+  <span class="r">{% if nick %}<a class="av c{{ nick|avc }}" href="/my">{{ nick[0] }}</a>{% else %}<a class="btn-login" href="/login">로그인</a>{% endif %}</span>
 </div>
 
 {% for msg in get_flashed_messages() %}<div class="flash">{{ msg }}</div>{% endfor %}

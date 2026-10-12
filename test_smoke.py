@@ -123,6 +123,33 @@ html = anon.get("/").get_data(as_text=True)
 assert "새 이슈" in html and "대기 이슈" not in html
 assert anon.get("/issue/3").status_code == 404
 
+# 11. 마이: 비로그인 리다이렉트, 스탯·히스토리, 비밀번호 변경
+assert anon.get("/my").status_code == 302
+html = user.get("/my").get_data(as_text=True)
+assert "tester" in html and "1회" in html and "100%" in html and "적중" in html and "회원 글" in html
+assert "틀림" in user.post("/my/password", data={"cur": "nope", "new": "abcd1234"}, follow_redirects=True).get_data(as_text=True)
+assert "변경됨" in user.post("/my/password", data={"cur": "pass1234", "new": "abcd1234"}, follow_redirects=True).get_data(as_text=True)
+assert A.app.test_client().post("/login", data={"nickname": "tester", "password": "abcd1234"}).status_code == 302
+
+# 12. 검색 · sitemap · robots · 결과 카드
+html = anon.get("/search?q=테스트").get_data(as_text=True)
+assert "테스트글" in html and "검색 결과" in html
+assert "두 글자" in anon.get("/search?q=a").get_data(as_text=True)
+assert "/issue/1/issue-1" in anon.get("/sitemap.xml").get_data(as_text=True)
+assert "Sitemap:" in anon.get("/robots.txt").get_data(as_text=True)
+assert os.path.exists(os.path.join(A.CARD_DIR, "1.png")), "마감 시 결과 카드 생성"
+assert 'og:image' in anon.get("/issue/1/issue-1").get_data(as_text=True)
+assert client("crawler").get("/issue/1/issue-1").headers.get("Cache-Control", "").startswith("public")
+assert not anon.get("/issue/1/issue-1").headers.get("Cache-Control", "").startswith("public"), "투표자 페이지는 개인화라 캐시 금지"
+assert "Lv." in user.get("/my").get_data(as_text=True)
+os.remove(os.path.join(A.CARD_DIR, "1.png"))
+
+# 13. 이슈 생성 파서 (API 호출 없이)
+import issue_gen
+mn, iss = issue_gen.parse_issues('```json\n{"main": {"title": "축의금 5만원이면 충분?", "summary": "s", "category": "일상", "opt_yes": "충분", "opt_no": "부족"}, '
+                                 '"issues": [{"title": "t1"}, {"title": "t2", "opt_yes": ""}]}\n```')
+assert mn["opt_yes"] == "충분" and iss[1]["opt_yes"] == "찬성" and len(iss) == 2
+
 # 8. 삭제: 비밀번호 틀림 403, 맞으면 삭제 / 회원 글은 본인만
 assert anon.post("/comment/1/delete", data={"pw": "9999"}).status_code == 403
 assert anon.post("/comment/1/delete", data={"pw": "0000"}).get_json()["ok"]

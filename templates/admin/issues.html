@@ -6,6 +6,12 @@
 <main class="form admin-page">
   <div class="atabs"><a class="on" href="/admin/issues">이슈 관리</a><a href="/admin/blind">신고 관리</a></div>
 
+  <form method="post" action="/admin/issues/generate" class="genrow">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div><b>오늘 이슈 자동 생성</b><small>뉴스 RSS → Claude(Haiku) → 메인 1 + 이슈 5. 승인 대기로 들어옴 (AUTO_PUBLISH=1이면 바로 게시). cron: 매일 07:30</small></div>
+    <button class="btn">오늘 이슈 뽑기</button>
+  </form>
+
   <div class="sh"><h2>{{ '이슈 수정 #' ~ edit.id if edit else '이슈 등록' }}</h2>{% if edit %}<a class="more" href="/admin/issues">새로 등록</a>{% endif %}</div>
   <form method="post" action="/admin/issues">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

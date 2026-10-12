@@ -24,7 +24,7 @@ BOARDS = Config.BOARDS
 SORTS = {"new": "p.id DESC", "best": "p.rec_cnt DESC, p.id DESC", "cmt": "p.cmt_cnt DESC, p.id DESC"}
 NICK_RE = re.compile(r"^[가-힣A-Za-z0-9_]{2,12}$")
 PW4_RE = re.compile(r"^\d{4}$")
-POST_SQL = "SELECT p.*, COALESCE(u.nickname, p.anon_nick) nick FROM posts p LEFT JOIN users u ON u.id=p.user_id"
+POST_SQL = "SELECT p.*, COALESCE(u.nickname, p.anon_nick) nick, u.points upts FROM posts p LEFT JOIN users u ON u.id=p.user_id"
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -87,6 +87,15 @@ def is_owner(row, pw):
     return bool(pw) and check_password_hash(row["anon_pw_hash"], pw)
 
 
+def login_required(view):
+    @wraps(view)
+    def wrapped(*a, **k):
+        if not session.get("uid"):
+            return redirect(url_for("login", next=request.path))
+        return view(*a, **k)
+    return wrapped
+
+
 def admin_required(view):
     @wraps(view)
     def wrapped(*a, **k):
@@ -127,6 +136,25 @@ def ftime(dt):
 @app.template_filter("comma")
 def comma(n):
     return f"{n or 0:,}"
+
+
+@app.template_filter("lv")
+def lv(points):
+    """누적 포인트 → 레벨 번호. None(유동닉)은 0."""
+    return sum(1 for t in app.config["LEVELS"] if (points or 0) >= t) if points is not None else 0
+
+
+@app.template_filter("avc")
+def avc(nick):
+    """닉네임 → 아바타 색상 클래스 번호(0~7). 같은 닉은 항상 같은 색."""
+    return sum(ord(c) for c in (nick or "")) % 8
+
+
+def next_level_gap(points):
+    for t in app.config["LEVELS"]:
+        if points < t:
+            return t - points
+    return 0
 
 
 @app.context_processor
@@ -182,8 +210,72 @@ def close_due_issues():
         close_issue(i)
 
 
+CARD_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static", "cards")
+FONT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static", "fonts", "Pretendard-Bold.otf")
+
+
 def make_card(iid):
-    """Phase 4: 공유용 결과 카드 이미지."""
+    """공유용 결과 카드 1200×630 → static/cards/<id>.png. 실패해도 서비스는 계속."""
+    try:
+        from PIL import ImageDraw, ImageFont
+        i = m.one("SELECT * FROM issues WHERE id=%s", (iid,))
+        if not i:
+            return
+        with_yp([i])
+        img = Image.new("RGB", (1200, 630), "#ffffff")
+        d = ImageDraw.Draw(img)
+        f_lab, f_t, f_bar, f_m = (ImageFont.truetype(FONT, s) for s in (26, 54, 30, 26))
+        d.rounded_rectangle((60, 60, 300, 108), 14, fill="#0e7c6f")
+        d.text((80, 70), "왈가 · 오늘의 왈가" if i["is_main"] else "왈가 · 이슈", font=f_lab, fill="#ffffff")
+        y = 150  # 제목 줄바꿈: 폭 기준 greedy
+        line = ""
+        for ch in i["title"]:
+            if d.textlength(line + ch, font=f_t) > 1080:
+                d.text((60, y), line, font=f_t, fill="#191f28")
+                y += 70
+                line = ch
+            else:
+                line += ch
+            if y > 300:
+                break
+        d.text((60, y), line, font=f_t, fill="#191f28")
+        yw = max(140, int(1080 * i["yp"] / 100))
+        d.rounded_rectangle((60, 400, 1140, 470), 16, fill="#e9ebee")
+        d.rounded_rectangle((60, 400, 60 + yw, 470), 16, fill="#0e7c6f")
+        d.text((84, 416), f"{i['opt_yes']} {i['yp']}%", font=f_bar, fill="#ffffff")
+        no = f"{i['opt_no']} {100 - i['yp']}%"
+        d.text((1116 - d.textlength(no, font=f_bar), 416), no, font=f_bar, fill="#6b7684")
+        d.text((60, 530), f"{i['part']:,}명 참여 · {i['open_date'].month}월 {i['open_date'].day}일 마감", font=f_m, fill="#9aa3ad")
+        tail = "다음 판: 왈가에서"
+        d.text((1140 - d.textlength(tail, font=f_m), 530), tail, font=f_m, fill="#0e7c6f")
+        os.makedirs(CARD_DIR, exist_ok=True)
+        img.save(os.path.join(CARD_DIR, f"{iid}.png"))
+    except Exception as e:  # 카드 실패는 마감을 막지 않음
+        app.logger.warning("card %s: %s", iid, e)
+
+
+def card_url(iid):
+    return url_for("static", filename=f"cards/{iid}.png", _external=True) if os.path.exists(os.path.join(CARD_DIR, f"{iid}.png")) else None
+
+
+def gen_issues_today():
+    """RSS → Claude → 오늘 날짜 이슈 6개 insert. 이미 있으면 건너뜀."""
+    import issue_gen
+    today = now_kst().date()
+    if m.one("SELECT 1 FROM issues WHERE open_date=%s LIMIT 1", (today,)):
+        return "오늘 날짜 이슈가 이미 있어서 건너뜀"
+    main, issues = issue_gen.generate(app.config["ANTHROPIC_API_KEY"])
+    ap = 1 if app.config["AUTO_PUBLISH"] else 0
+    for k, i in enumerate([main] + issues):
+        m.run("INSERT INTO issues(title, summary, category, is_main, opt_yes, opt_no, open_date, approved, slug) VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s)",
+              (i["title"], i["summary"], i["category"], 1 if k == 0 else 0, i["opt_yes"], i["opt_no"], today, ap, slugify(i["title"])))
+    return f"이슈 {1 + len(issues)}개 생성 ({'바로 게시됨' if ap else '승인 대기'})"
+
+
+@app.cli.command("gen-issues")
+def cli_gen_issues():
+    """cron용: 30 7 * * * cd /var/www/walga && ./venv/bin/flask --app app gen-issues"""
+    print(gen_issues_today())
 
 
 def my_vote(iid):
@@ -256,7 +348,35 @@ def issue(iid, slug=None):
     mine = my_vote(iid)
     comments = load_comments("issue", iid)
     cmt_n = m.one("SELECT COUNT(*) n FROM comments WHERE target='issue' AND target_id=%s", (iid,))["n"]
-    return render_template("issue.html", i=i, mine=mine, comments=comments, cmt_n=cmt_n, can_comment=mine is not None)
+    card = None
+    if i["closed"]:
+        if not card_url(iid):
+            make_card(iid)
+        card = card_url(iid)
+    resp = app.make_response(render_template("issue.html", i=i, mine=mine, comments=comments, cmt_n=cmt_n,
+                                             can_comment=mine is not None, card=card))
+    if i["closed"] and mine is None and not session.get("uid"):
+        # 핵심 규칙 6: 마감 이슈는 SEO 자산. 비로그인·미투표 방문자(크롤러 포함)에겐 캐시 허용
+        # ponytail: nginx proxy_cache를 켜면 이 헤더로 10분 캐시됨. 파일 캐시는 세션별 CSRF 토큰 문제로 보류
+        resp.headers["Cache-Control"] = "public, max-age=600"
+    return resp
+
+
+@app.get("/sitemap.xml")
+def sitemap():
+    base = (app.config["SITE_URL"] or request.host_url).rstrip("/")
+    urls = [f"{base}/", f"{base}/issue", f"{base}/best"] + [f"{base}/board/{b}" for b in BOARDS]
+    urls += [f"{base}/issue/{r['id']}/{r['slug'] or ''}" for r in m.rows("SELECT id, slug FROM issues WHERE approved=1 ORDER BY id DESC LIMIT 2000")]
+    urls += [f"{base}/post/{r['id']}" for r in m.rows("SELECT id FROM posts WHERE status=1 ORDER BY id DESC LIMIT 2000")]
+    xml = '<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' + \
+          "".join(f"<url><loc>{escape(u)}</loc></url>" for u in urls) + "</urlset>"
+    return Response(xml, mimetype="application/xml")
+
+
+@app.get("/robots.txt")
+def robots():
+    base = (app.config["SITE_URL"] or request.host_url).rstrip("/")
+    return Response(f"User-agent: *\nDisallow: /admin\nDisallow: /write\nSitemap: {base}/sitemap.xml\n", mimetype="text/plain")
 
 
 @app.post("/vote")
@@ -326,6 +446,70 @@ def logout():
     return redirect(url_for("home"))
 
 
+# ─── 마이 · 검색 ─────────────────────────────────────────
+
+@app.get("/my")
+@login_required
+def my():
+    close_due_issues()
+    uid = session["uid"]
+    u = m.one("SELECT *, DATEDIFF(CURDATE(), created_at)+1 days FROM users WHERE id=%s", (uid,))
+    if not u:
+        session.clear()
+        return redirect(url_for("login"))
+    st = m.one("SELECT COUNT(*) total, "
+               "SUM(i.closed=1 AND i.yes_cnt<>i.no_cnt) decided, "
+               "SUM(i.closed=1 AND i.yes_cnt<>i.no_cnt AND (i.yes_cnt>i.no_cnt)=(v.choice=1)) hits "
+               "FROM votes v JOIN issues i ON i.id=v.issue_id WHERE v.user_id=%s", (uid,))
+    votes = m.rows("SELECT v.choice, i.* FROM votes v JOIN issues i ON i.id=v.issue_id WHERE v.user_id=%s ORDER BY v.id DESC LIMIT 30", (uid,))
+    for v in votes:
+        if v["closed"]:
+            with_yp([v])
+            v["st"] = "동률" if not v["maj"] else ("적중" if (v["maj"] == v["opt_yes"]) == (v["choice"] == 1) else "빗나감")
+        else:
+            v["st"] = "진행 중"
+    posts = m.rows(f"{POST_SQL} WHERE p.user_id=%s AND p.status=1 ORDER BY p.id DESC LIMIT 10", (uid,))
+    cmts = m.rows("SELECT c.*, COALESCE(p.title, i.title) ttl FROM comments c "
+                  "LEFT JOIN posts p ON c.target='post' AND p.id=c.target_id "
+                  "LEFT JOIN issues i ON c.target='issue' AND i.id=c.target_id "
+                  "WHERE c.user_id=%s ORDER BY c.id DESC LIMIT 10", (uid,))
+    hit_rate = round(int(st["hits"] or 0) * 100 / int(st["decided"])) if st["decided"] else None
+    return render_template("my.html", u=u, st=st, hit_rate=hit_rate, votes=votes, posts=posts, cmts=cmts,
+                           gap=next_level_gap(u["points"]))
+
+
+@app.post("/my/password")
+@login_required
+def my_password():
+    u = m.one("SELECT pw_hash FROM users WHERE id=%s", (session["uid"],))
+    new = request.form.get("new", "")
+    if not check_password_hash(u["pw_hash"], request.form.get("cur", "")):
+        flash("현재 비밀번호가 틀림")
+    elif len(new) < 4:
+        flash("새 비밀번호는 4자 이상")
+    else:
+        m.run("UPDATE users SET pw_hash=%s WHERE id=%s", (generate_password_hash(new), session["uid"]))
+        flash("비밀번호 변경됨")
+    return redirect(url_for("my"))
+
+
+@app.get("/search")
+def search():
+    q = request.args.get("q", "").strip()[:50]
+    posts, issues = [], []
+    if len(q) >= 2:
+        like = f"%{q}%"  # ponytail: LIKE 검색. 글이 수만 건 넘으면 FULLTEXT 인덱스로
+        posts = m.rows(f"{POST_SQL} WHERE p.status=1 AND (p.title LIKE %s OR p.content LIKE %s) ORDER BY p.id DESC LIMIT 50", (like, like))
+        issues = m.rows("SELECT * FROM issues WHERE approved=1 AND title LIKE %s ORDER BY id DESC LIMIT 20", (like,))
+        for i in issues:
+            if i["closed"]:
+                with_yp([i])
+            else:
+                i["part"] = i["yes_cnt"] + i["no_cnt"]
+                i["yes_cnt"] = i["no_cnt"] = None
+    return render_template("search.html", q=q, posts=posts, issues=issues)
+
+
 # ─── 게시판 ─────────────────────────────────────────────
 
 @app.get("/board/<board>")
@@ -366,7 +550,7 @@ def post(pid):
 
 def load_comments(target, tid):
     """1단계 대댓글 트리. 부모가 없어진 답글은 루트로 올림."""
-    cs = m.rows("SELECT c.*, COALESCE(u.nickname, c.anon_nick) nick FROM comments c LEFT JOIN users u ON u.id=c.user_id "
+    cs = m.rows("SELECT c.*, COALESCE(u.nickname, c.anon_nick) nick, u.points upts FROM comments c LEFT JOIN users u ON u.id=c.user_id "
                 "WHERE c.target=%s AND c.target_id=%s ORDER BY c.id", (target, tid))
     by_id, roots = {}, []
     for c in cs:
@@ -554,6 +738,16 @@ def admin_issues():
     edit = m.one("SELECT * FROM issues WHERE id=%s", (edit_id,)) if edit_id else None
     issues = m.rows("SELECT *, yes_cnt+no_cnt part FROM issues ORDER BY open_date DESC, is_main DESC, id DESC LIMIT 60")
     return render_template("admin/issues.html", issues=issues, edit=edit, today=now_kst().date())
+
+
+@app.post("/admin/issues/generate")
+@admin_required
+def admin_issues_generate():
+    try:
+        flash(gen_issues_today())
+    except Exception as e:
+        flash(f"이슈 생성 실패: {e}")
+    return redirect(url_for("admin_issues"))
 
 
 @app.post("/admin/issues/<int:iid>/<action>")

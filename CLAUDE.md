@@ -51,10 +51,10 @@ attendance(id PK, user_id FK, date DATE, UNIQ(user_id,date))
 /admin              이슈 등록·수정, 블라인드 관리 (BasicAuth)
 ```
 
-## 배치 (APScheduler)
-1. **23:59 마감**: is_main·당일 이슈 closed=1, 집계 확정, 다수파 적중 포인트 지급(+10P), 결과 캐시 생성
-2. **07:30 이슈 생성**: 네이버뉴스/RSS 수집 → Claude API(Haiku)로 이슈 5개 선정 + 커뮤 말투 요약("~했음" 체) + 찬반 질문 생성 → admin 승인 대기(auto_publish 플래그로 전환 가능). 오늘의 왈가 1개는 일상·논쟁형(검색 키워드 기반) 우선
-3. **마감 후 결과 카드**: Pillow로 공유용 이미지 생성(제목+게이지+"다음 판: 왈가에서") → /static/cards/ 저장 (스레드 업로드는 수동)
+## 배치 (타이머 없음 — 2026-10 결정)
+1. **마감**: APScheduler 대신 **지연 마감**. `close_due_issues()`가 홈/이슈/투표/마이 요청 시 `open_date < 오늘`인 이슈를 닫고(= 23:59 경과) 다수파 적중 +10P 지급 + 결과 카드 생성. 동시 요청은 rowcount로 1회만
+2. **이슈 생성**: `issue_gen.py` — Google News RSS → Claude(claude-haiku-5-5) → 메인 1 + 이슈 5 (커뮤 말투, 찬반 라벨). admin 「오늘 이슈 뽑기」 버튼 또는 cron `30 7 * * * cd /var/www/walga && ./venv/bin/flask --app app gen-issues`. 기본 승인 대기(`approved=0`), `AUTO_PUBLISH=1`이면 바로 게시
+3. **결과 카드**: 마감 시 Pillow로 1200×630 생성(제목+게이지+"다음 판: 왈가에서") → /static/cards/<id>.png, 마감 이슈 og:image로 사용. 폰트 static/fonts/Pretendard-Bold.otf
 
 ## 광고
 - 템플릿에 ad 슬롯 includes, `AD_ENABLED=False` 설정 하나로 전체 온오프
