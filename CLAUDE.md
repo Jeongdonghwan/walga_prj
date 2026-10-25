@@ -45,6 +45,7 @@ attendance(id PK, user_id FK, date DATE, UNIQ(user_id,date))
 /issue/<id>/<slug>  이슈 상세 (요약+투표+댓글, 마감 시 결과 게이지)
 /vote               POST 투표 (중복체크, 진행 중엔 결과 미반환)
 /best               왈가베스트
+/news               뉴스 (운영진 직접 등록 + Google News RSS 수집, 홈 중간 섹션 8개) — /admin/news, cron `0 */3 * * * flask --app app fetch-news`
 /board/<free|humor> 게시판 목록 / /post/<id> 상세 / /write 작성
 /rec, /comment, /report  POST
 /my                 마이 (스트릭, 투표 히스토리, 적중률)

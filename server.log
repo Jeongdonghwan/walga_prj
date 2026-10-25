@@ -86,3 +86,10 @@ Press CTRL+C to quit
  * Restarting with stat
  * Debugger is active!
  * Debugger PIN: 103-551-591
+127.0.0.1 - - [25/Oct/2026 16:43:42] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [25/Oct/2026 16:43:43] "GET /static/app.js HTTP/1.1" 200 -
+127.0.0.1 - - [25/Oct/2026 16:43:43] "GET /static/style.css HTTP/1.1" 200 -
+127.0.0.1 - - [25/Oct/2026 16:43:44] "GET /static/favicon.ico HTTP/1.1" 200 -
+127.0.0.1 - - [25/Oct/2026 16:43:46] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [25/Oct/2026 16:43:46] "GET /static/app.js HTTP/1.1" 200 -
+127.0.0.1 - - [25/Oct/2026 16:43:46] "GET /static/style.css HTTP/1.1" 200 -
