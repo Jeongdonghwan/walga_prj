@@ -6,13 +6,55 @@ Press CTRL+C to quit
  * Restarting with stat
  * Debugger is active!
  * Debugger PIN: 103-551-591
-127.0.0.1 - - [12/Oct/2026 17:30:51] "GET / HTTP/1.1" 200 -
-127.0.0.1 - - [12/Oct/2026 17:30:51] "GET / HTTP/1.1" 200 -
-127.0.0.1 - - [12/Oct/2026 17:30:51] "GET /issue HTTP/1.1" 200 -
-127.0.0.1 - - [12/Oct/2026 20:14:56] "GET / HTTP/1.1" 200 -
-127.0.0.1 - - [12/Oct/2026 20:14:56] "GET /static/style.css HTTP/1.1" 304 -
-127.0.0.1 - - [12/Oct/2026 20:14:57] "GET /static/app.js HTTP/1.1" 304 -
- * Detected change in 'C:\\side_Prj\\walga_prj\\app.py', reloading
- * Restarting with stat
- * Debugger is active!
- * Debugger PIN: 103-551-591
+127.0.0.1 - - [25/Oct/2026 16:17:04] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [25/Oct/2026 16:17:04] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [25/Oct/2026 16:23:31] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [25/Oct/2026 16:23:31] "GET /static/style.css HTTP/1.1" 200 -
+127.0.0.1 - - [25/Oct/2026 16:23:32] "GET /static/app.js HTTP/1.1" 200 -
+127.0.0.1 - - [25/Oct/2026 16:23:32] "GET /static/favicon.ico HTTP/1.1" 200 -
+127.0.0.1 - - [25/Oct/2026 16:23:34] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [25/Oct/2026 16:23:34] "GET /static/style.css HTTP/1.1" 304 -
+127.0.0.1 - - [25/Oct/2026 16:23:34] "GET /static/app.js HTTP/1.1" 304 -
+127.0.0.1 - - [25/Oct/2026 16:23:35] "GET /issue HTTP/1.1" 200 -
+127.0.0.1 - - [25/Oct/2026 16:23:35] "GET /static/style.css HTTP/1.1" 304 -
+127.0.0.1 - - [25/Oct/2026 16:23:35] "GET /static/app.js HTTP/1.1" 304 -
+127.0.0.1 - - [25/Oct/2026 16:23:35] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [25/Oct/2026 16:23:35] "GET /static/style.css HTTP/1.1" 304 -
+127.0.0.1 - - [25/Oct/2026 16:23:35] "GET /static/app.js HTTP/1.1" 304 -
+127.0.0.1 - - [25/Oct/2026 16:23:36] "GET /issue HTTP/1.1" 200 -
+127.0.0.1 - - [25/Oct/2026 16:23:36] "GET /static/style.css HTTP/1.1" 304 -
+127.0.0.1 - - [25/Oct/2026 16:23:36] "GET /static/app.js HTTP/1.1" 304 -
+127.0.0.1 - - [25/Oct/2026 16:23:37] "GET /best HTTP/1.1" 200 -
+127.0.0.1 - - [25/Oct/2026 16:23:37] "GET /static/style.css HTTP/1.1" 304 -
+127.0.0.1 - - [25/Oct/2026 16:23:37] "GET /static/app.js HTTP/1.1" 304 -
+127.0.0.1 - - [25/Oct/2026 16:23:37] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [25/Oct/2026 16:23:37] "GET /static/style.css HTTP/1.1" 304 -
+127.0.0.1 - - [25/Oct/2026 16:23:37] "GET /static/app.js HTTP/1.1" 304 -
+127.0.0.1 - - [25/Oct/2026 16:23:42] "GET /best HTTP/1.1" 200 -
+127.0.0.1 - - [25/Oct/2026 16:23:42] "GET /static/style.css HTTP/1.1" 304 -
+127.0.0.1 - - [25/Oct/2026 16:23:42] "GET /static/app.js HTTP/1.1" 304 -
+127.0.0.1 - - [25/Oct/2026 16:23:44] "GET /board/free HTTP/1.1" 200 -
+127.0.0.1 - - [25/Oct/2026 16:23:44] "GET /static/style.css HTTP/1.1" 304 -
+127.0.0.1 - - [25/Oct/2026 16:23:44] "GET /static/app.js HTTP/1.1" 304 -
+127.0.0.1 - - [25/Oct/2026 16:23:44] "GET /board/humor HTTP/1.1" 200 -
+127.0.0.1 - - [25/Oct/2026 16:23:44] "GET /static/style.css HTTP/1.1" 304 -
+127.0.0.1 - - [25/Oct/2026 16:23:44] "GET /static/app.js HTTP/1.1" 304 -
+127.0.0.1 - - [25/Oct/2026 16:23:45] "GET /board/work HTTP/1.1" 200 -
+127.0.0.1 - - [25/Oct/2026 16:23:45] "GET /static/style.css HTTP/1.1" 304 -
+127.0.0.1 - - [25/Oct/2026 16:23:45] "GET /static/app.js HTTP/1.1" 304 -
+127.0.0.1 - - [25/Oct/2026 16:23:46] "GET /board/money HTTP/1.1" 200 -
+127.0.0.1 - - [25/Oct/2026 16:23:46] "GET /static/style.css HTTP/1.1" 304 -
+127.0.0.1 - - [25/Oct/2026 16:23:46] "GET /static/app.js HTTP/1.1" 304 -
+127.0.0.1 - - [25/Oct/2026 16:23:46] "GET /board/love HTTP/1.1" 200 -
+127.0.0.1 - - [25/Oct/2026 16:23:46] "GET /static/style.css HTTP/1.1" 304 -
+127.0.0.1 - - [25/Oct/2026 16:23:46] "GET /static/app.js HTTP/1.1" 304 -
+127.0.0.1 - - [25/Oct/2026 16:27:46] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [25/Oct/2026 16:27:46] "GET /static/app.js HTTP/1.1" 200 -
+127.0.0.1 - - [25/Oct/2026 16:27:46] "GET /static/style.css HTTP/1.1" 200 -
+127.0.0.1 - - [25/Oct/2026 16:27:48] "GET /static/favicon.ico HTTP/1.1" 200 -
+127.0.0.1 - - [25/Oct/2026 16:27:49] "GET /post/1 HTTP/1.1" 200 -
+127.0.0.1 - - [25/Oct/2026 16:27:49] "GET /static/style.css HTTP/1.1" 304 -
+127.0.0.1 - - [25/Oct/2026 16:27:49] "GET /static/app.js HTTP/1.1" 304 -
+127.0.0.1 - - [25/Oct/2026 16:27:51] "GET /board/free HTTP/1.1" 200 -
+127.0.0.1 - - [25/Oct/2026 16:27:51] "GET /static/style.css HTTP/1.1" 200 -
+127.0.0.1 - - [25/Oct/2026 16:27:51] "GET /static/app.js HTTP/1.1" 200 -

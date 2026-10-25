@@ -52,34 +52,38 @@ def main():
     c = pymysql.connect(host=Config.DB_HOST, port=Config.DB_PORT, user=Config.DB_USER, password=Config.DB_PASSWORD,
                         database=Config.DB_NAME, charset="utf8mb4", autocommit=True, init_command="SET time_zone='+09:00'")
     cur = c.cursor()
-    cur.execute("SELECT COUNT(*) FROM posts")
-    if cur.fetchone()[0]:
-        print("이미 글이 있어서 건너뜀")
-        return
     pw = generate_password_hash(PW)
+    cur.execute("SELECT COUNT(*) FROM posts")
+    has_posts = cur.fetchone()[0] > 0
     for nick, pts in MEMBERS.items():
         cur.execute("INSERT IGNORE INTO users(nickname, pw_hash, points, streak, created_at) VALUES(%s,%s,%s,%s,NOW()-INTERVAL %s DAY)",
                     (nick, pw, pts, random.randint(0, 20), random.randint(5, 120)))
     cur.execute("SELECT id, nickname FROM users")
     uid = {n: i for i, n in cur.fetchall()}
 
-    for board, nick, title, rec, cmt, best in POSTS:
+    for board, nick, title, rec, cmt, best in ([] if has_posts else POSTS):
         cur.execute("INSERT INTO posts(board, user_id, anon_nick, anon_pw_hash, title, content, rec_cnt, cmt_cnt, is_best, best_at, view_cnt, created_at) "
                     "VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,IF(%s,NOW(),NULL),%s,NOW()-INTERVAL %s MINUTE)",
                     (board, uid.get(nick), None if nick in uid else nick, None if nick in uid else pw, title, BODY, rec, cmt, best, best, rec * 7, random.randint(5, 600)))
     cur.execute("SELECT id FROM posts ORDER BY id LIMIT 1")
     pid = cur.fetchone()[0]
-    for k, nick in enumerate(["짤줍는사람", "재테크초보", "자취만렙", "축의금고민", "도보10분"]):
+    for k, nick in enumerate([] if has_posts else ["짤줍는사람", "재테크초보", "자취만렙", "축의금고민", "도보10분"]):
         cur.execute("INSERT INTO comments(target, target_id, user_id, content, rec_cnt) VALUES('post',%s,%s,%s,%s)",
                     (pid, uid[nick], "ㅋㅋㅋ 이거 진짜임? 나도 비슷한 경험 있음", (k + 1) * 3))
     cur.execute("SELECT id FROM comments WHERE target_id=%s ORDER BY id LIMIT 1", (pid,))
-    cur.execute("INSERT INTO comments(target, target_id, parent_id, user_id, content) VALUES('post',%s,%s,%s,'ㄹㅇ 공감')", (pid, cur.fetchone()[0], uid["퇴근요정"]))
+    if not has_posts:
+        cur.execute("INSERT INTO comments(target, target_id, parent_id, user_id, content) VALUES('post',%s,%s,%s,'ㄹㅇ 공감')", (pid, cur.fetchone()[0], uid["퇴근요정"]))
 
+    # 오늘 이슈는 날짜가 지나면 자동 마감되므로, 글이 있어도 오늘 것이 없으면 다시 넣음
     cur.execute("SELECT COUNT(*) FROM issues WHERE open_date=CURDATE()")
     if not cur.fetchone()[0]:
         for t, s, main_, part in TODAY:
             cur.execute("INSERT INTO issues(title, summary, category, is_main, open_date, yes_cnt, no_cnt, slug) VALUES(%s,%s,'사회',%s,CURDATE(),%s,%s,%s)",
                         (t, s, main_, part // 2, part - part // 2, slugify(t)))
+    cur.execute("SELECT COUNT(*) FROM issues WHERE closed=1")
+    if cur.fetchone()[0]:
+        print("오늘 이슈만 갱신함 (글·아카이브는 이미 있음)" if has_posts else "")
+        return
     for t, y, n, oy, on in YDAY:
         cur.execute("INSERT INTO issues(title, summary, category, opt_yes, opt_no, open_date, closed, yes_cnt, no_cnt, view_cnt, slug) "
                     "VALUES(%s,'그때 그 논쟁. 결과는 이렇게 났음.','일상',%s,%s,CURDATE()-INTERVAL 1 DAY,1,%s,%s,%s,%s)", (t, oy, on, y, n, (y + n) * 3, slugify(t)))

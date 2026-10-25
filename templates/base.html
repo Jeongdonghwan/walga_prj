@@ -27,7 +27,7 @@
       <a class="me" href="/my"><span class="av c{{ nick|avc }}">{{ nick[0] }}</span>{{ nick }}</a>
       <form method="post" action="/logout"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button>로그아웃</button></form>
       {% else %}
-      <a class="btn-login" href="/login">로그인</a>
+      <a class="btn-login" href="/login">로그인</a><a class="join" href="/signup">회원가입</a>
       {% endif %}
     </div>
   </div>
