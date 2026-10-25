@@ -189,6 +189,8 @@ assert "한강 러닝" in html and "1/2" in html and "D-3" in html
 html = anon.get("/meetup/1").get_data(as_text=True)
 assert "참여 중" in html and "모임장" in html, "개설자는 자동 참여"
 assert "닉네임을" in anon2.post("/meetup/1/join", follow_redirects=True).get_data(as_text=True)
+assert "회원 닉네임" in anon2.post("/meetup/1/join", data={"nick": "tester"}, follow_redirects=True).get_data(as_text=True)
+assert "이미 있음" in anon2.post("/meetup/1/join", data={"nick": "모임장"}, follow_redirects=True).get_data(as_text=True)
 assert "참여 완료" in anon2.post("/meetup/1/join", data={"nick": "러너"}, follow_redirects=True).get_data(as_text=True)
 assert "정원이 다 찼음" in user.post("/meetup/1/join", follow_redirects=True).get_data(as_text=True)
 assert "참여 취소함" in anon2.post("/meetup/1/join", follow_redirects=True).get_data(as_text=True)
@@ -198,9 +200,16 @@ assert anon2.post("/comment", data={"target": "meetup", "target_id": 1, "content
 assert "몇 시에 모임?" in anon.get("/meetup/1").get_data(as_text=True)
 for i in range(3):
     assert client(f"mrep{i}").post("/report", data={"target": "meetup", "target_id": 1}).get_json()["ok"]
-assert "블라인드된 모임" in anon.get("/meetup/1").get_data(as_text=True)
+html = anon.get("/meetup/1").get_data(as_text=True)
+assert "블라인드된 모임" in html and "같이 뜀" not in html and "og:title" not in html, "블라인드 시 head 메타도 숨김"
 assert "모임 #1" in anon.get("/admin/blind", headers=auth).get_data(as_text=True)
 anon.post("/admin/blind", headers=auth, data={"target": "meetup", "target_id": 1, "status": 1})
+past = (datetime.now() - timedelta(days=1)).replace(second=0, microsecond=0)
+db("UPDATE meetups SET meet_at=%s WHERE id=1", (past,))
+r = anon.post("/meetup/1/edit", data={"pw": "1234", "title": "한강 러닝(장소 변경)", "description": "같이 뜀", "meet_at": past.strftime("%Y-%m-%dT%H:%M"), "capacity": 2})
+assert r.status_code == 302 and db("SELECT title FROM meetups WHERE id=1")[0] == "한강 러닝(장소 변경)", "지난 모임도 일시 그대로면 수정 가능"
+r = anon.post("/meetup/1/edit", data={"pw": "1234", "title": "x", "description": "d", "meet_at": (past - timedelta(hours=1)).strftime("%Y-%m-%dT%H:%M"), "capacity": 2})
+assert r.status_code == 200 and "지난 시각" in r.get_data(as_text=True), "일시를 과거로 바꾸는 건 거부"
 assert user.post("/meetup/1/delete").status_code == 403, "회원이 유동닉 모임 삭제 불가(비번 없음)"
 assert anon.post("/meetup/1/delete", data={"pw": "1234"}).get_json()["ok"]
 assert anon.get("/meetup/1").status_code == 404 and db("SELECT COUNT(*) FROM meetup_members")[0] == 0

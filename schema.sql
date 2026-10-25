@@ -118,6 +118,12 @@ CREATE TABLE IF NOT EXISTS news (
   UNIQUE KEY uq_url (url(191))
 ) CHARACTER SET utf8mb4;
 
+-- ─── 기존 DB 마이그레이션 (멱등: 새 DB에선 아무 영향 없음) ───
+ALTER TABLE comments MODIFY target ENUM('post','issue','meetup') NOT NULL;
+ALTER TABLE reports MODIFY target ENUM('post','comment','meetup') NOT NULL;
+ALTER TABLE issues ADD COLUMN IF NOT EXISTS approved TINYINT NOT NULL DEFAULT 1;
+ALTER TABLE news ADD COLUMN IF NOT EXISTS image VARCHAR(500) NULL AFTER source;
+
 CREATE TABLE IF NOT EXISTS meetups (
   id INT AUTO_INCREMENT PRIMARY KEY,
   user_id INT NULL,

@@ -785,9 +785,9 @@ MEETUP_SQL = ("SELECT mt.*, COALESCE(u.nickname, mt.anon_nick) nick, u.points up
               "FROM meetups mt LEFT JOIN users u ON u.id=mt.user_id")
 
 
-def meetup_fields(form):
-    """개설/수정 공통 입력 검증 → dict 또는 ValueError."""
-    title, desc = form.get("title", "").strip()[:120], form.get("description", "").strip()
+def meetup_fields(form, keep_at=None):
+    """개설/수정 공통 입력 검증 → dict 또는 ValueError. keep_at: 수정 시 기존 일시(그대로면 지난 시각이어도 허용)."""
+    title, desc = form.get("title", "").strip()[:120], form.get("description", "").strip()[:5000]
     place = form.get("place", "").strip()[:100] or None
     cap = form.get("capacity", type=int)
     try:
@@ -796,7 +796,7 @@ def meetup_fields(form):
         raise ValueError("모임 일시를 정하셈")
     if not title or not desc:
         raise ValueError("제목과 설명은 필수")
-    if meet_at < now_kst():
+    if meet_at < now_kst() and meet_at != (keep_at and keep_at.replace(second=0, microsecond=0)):
         raise ValueError("이미 지난 시각임")
     if cap is not None and not (2 <= cap <= 500):
         raise ValueError("정원은 2~500명")
@@ -855,17 +855,22 @@ def meetup_join(mid):
     if m.affect("DELETE FROM meetup_members WHERE meetup_id=%s AND (user_id=%s OR anon_hash=%s)", (mid, uid, ah)):
         flash("참여 취소함")
         return redirect(back)
+    nick = session.get("nick") or request.form.get("nick", "").strip()
     if mt["meet_at"] < now_kst():
         flash("이미 끝난 모임임")
-    elif mt["capacity"] is not None and mt["members"] >= mt["capacity"]:
+    elif not NICK_RE.match(nick or ""):
+        flash("참여할 닉네임을 2~12자로 적으셈")
+    elif not uid and m.one("SELECT 1 FROM users WHERE nickname=%s", (nick,)):
+        flash("회원 닉네임임. 다른 닉네임 쓰셈")
+    elif m.one("SELECT 1 FROM meetup_members WHERE meetup_id=%s AND nick=%s", (mid, nick)):
+        flash("이 모임에 같은 닉네임이 이미 있음")
+    elif not m.affect(  # 정원 검사와 INSERT를 한 문장으로 (동시 참여 경쟁 방지)
+            "INSERT INTO meetup_members(meetup_id, user_id, anon_hash, nick) SELECT %s,%s,%s,%s FROM DUAL "
+            "WHERE %s IS NULL OR (SELECT COUNT(*) FROM meetup_members WHERE meetup_id=%s) < %s",
+            (mid, uid, ah, nick, mt["capacity"], mid, mt["capacity"] or 0)):
         flash("정원이 다 찼음")
     else:
-        nick = session.get("nick") or request.form.get("nick", "").strip()
-        if not NICK_RE.match(nick or ""):
-            flash("참여할 닉네임을 2~12자로 적으셈")
-        else:
-            m.run("INSERT IGNORE INTO meetup_members(meetup_id, user_id, anon_hash, nick) VALUES(%s,%s,%s,%s)", (mid, uid, ah, nick))
-            flash("참여 완료")
+        flash("참여 완료")
     return redirect(back)
 
 
@@ -880,7 +885,7 @@ def meetup_edit(mid):
         try:
             if not is_owner(mt, request.form.get("pw", "")):
                 raise ValueError("비밀번호가 틀림")
-            f = meetup_fields(request.form)
+            f = meetup_fields(request.form, keep_at=mt["meet_at"])
         except ValueError as e:
             flash(str(e))
         else:

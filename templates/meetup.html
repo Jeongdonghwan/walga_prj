@@ -1,13 +1,13 @@
 {% extends "base.html" %}
 {% from "_ui.html" import ic, comment_box with context %}
 {% set nav = 'meetup' %}
-{% block title %}{{ mt.title }} — 왈가 모임{% endblock %}
 {% block mtitle %}모임{% endblock %}
-{% block head %}
+{% block title %}{{ '블라인드된 모임' if blind else mt.title }} — 왈가 모임{% endblock %}
+{% block head %}{% if not blind %}
 <meta name="description" content="{{ mt.meet_at|fdt }} · {{ mt.place or '장소 미정' }} · {{ mt.description[:100] }}">
 <meta property="og:title" content="{{ mt.title }}">
 {% if mt.has_image %}<meta property="og:image" content="{{ url_for('static', filename='uploads/m' ~ mt.id ~ '.jpg', _external=True) }}">{% endif %}
-{% endblock %}
+{% endif %}{% endblock %}
 {% block body %}
 <main class="post mdetail">
 {% if blind %}
@@ -47,7 +47,7 @@
 
   <div class="sh"><h2>참여자 <span class="n">{{ members|length }}</span></h2></div>
   <ul class="mmembers">
-    {% for x in members %}<li><span class="av c{{ x.nick|avc }}">{{ x.nick[0] }}</span>{{ x.nick }}{% if x.nick == mt.nick %}<span class="hostmark">모임장</span>{% endif %}</li>
+    {% for x in members %}<li><span class="av c{{ x.nick|avc }}">{{ x.nick[0] }}</span>{{ x.nick }}{% if loop.first %}<span class="hostmark">모임장</span>{% endif %}</li>
     {% else %}<li class="empty">아직 아무도 없음</li>{% endfor %}
   </ul>
 

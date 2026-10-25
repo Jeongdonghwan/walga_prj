@@ -510,6 +510,7 @@ ul{list-style:none}
   .mgrid{grid-template-columns:1fr 1fr;gap:16px 12px;padding:0 16px}
   .mgrid .tt{font-size:14px}
   .minfo{grid-template-columns:1fr}
+  .anon.wrap3{flex-direction:column}
   .joinf{flex-wrap:wrap}
   .joinf input{flex:1;width:auto;min-width:0}
   .my{padding:0 16px}

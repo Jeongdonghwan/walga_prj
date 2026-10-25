@@ -18,6 +18,7 @@
 6. 이슈 페이지는 SEO 자산: 마감 후 `/issue/<id>/<slug>` 정적 캐시, meta/OG 자동 생성
 
 ## DB (MariaDB, utf8mb4)
+- schema.sql 끝에 멱등 ALTER 마이그레이션 섹션이 있어 서버 업데이트는  한 번이면 됨 (news·meetups·meetup_members 테이블, ENUM 확장 포함)
 ```sql
 users(id PK, nickname UNIQ, pw_hash, points INT DEF 0, streak INT DEF 0, last_vote_date DATE, created_at)
 issues(id PK, title, summary TEXT, category VARCHAR(20), is_main TINYINT DEF 0,  -- 오늘의 왈가
@@ -45,6 +46,7 @@ attendance(id PK, user_id FK, date DATE, UNIQ(user_id,date))
 /issue/<id>/<slug>  이슈 상세 (요약+투표+댓글, 마감 시 결과 게이지)
 /vote               POST 투표 (중복체크, 진행 중엔 결과 미반환)
 /best               왈가베스트
+/meetup             모임 (카드형: 썸네일·일시·장소·정원·D-day). /meetup/new, /meetup/<id>(참여 토글·댓글), /meetup/<id>/edit·delete. 유동닉 가능, 신고 블라인드 연동. GNB 맨 우측 앰버색
 /news               뉴스 (운영진 직접 등록 + Google News RSS 수집, 홈 중간 섹션 8개) — /admin/news, cron `0 */3 * * * flask --app app fetch-news`
 /board/<free|humor> 게시판 목록 / /post/<id> 상세 / /write 작성
 /rec, /comment, /report  POST
