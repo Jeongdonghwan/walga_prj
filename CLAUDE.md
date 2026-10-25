@@ -18,7 +18,7 @@
 6. 이슈 페이지는 SEO 자산: 마감 후 `/issue/<id>/<slug>` 정적 캐시, meta/OG 자동 생성
 
 ## DB (MariaDB, utf8mb4)
-- schema.sql 끝에 멱등 ALTER 마이그레이션 섹션이 있어 서버 업데이트는  한 번이면 됨 (news·meetups·meetup_members 테이블, ENUM 확장 포함)
+- schema.sql 끝에 멱등 ALTER 마이그레이션 섹션이 있어 서버 업데이트는 `mysql -u root -p walga < schema.sql` 한 번이면 됨 (news·meetups·meetup_members 테이블, ENUM 확장 포함)
 ```sql
 users(id PK, nickname UNIQ, pw_hash, points INT DEF 0, streak INT DEF 0, last_vote_date DATE, created_at)
 issues(id PK, title, summary TEXT, category VARCHAR(20), is_main TINYINT DEF 0,  -- 오늘의 왈가
