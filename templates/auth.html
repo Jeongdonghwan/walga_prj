@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% set one_col = True %}
 {% set nav = 'my' %}
 {% set h = '회원가입' if mode == 'signup' else '로그인' %}
 {% block title %}{{ h }} — 왈가{% endblock %}

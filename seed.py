@@ -48,6 +48,25 @@ def slugify(t):
     return re.sub(r"[^\w가-힣]+", "-", t).strip("-")[:80] or "issue"
 
 
+def add_images(cur):
+    """유머·일상 글 3개에 샘플 사진(picsum.photos) 첨부. 네트워크 없으면 조용히 건너뜀."""
+    import os
+    import requests
+    cur.execute("SELECT COUNT(*) FROM posts WHERE has_image=1")
+    if cur.fetchone()[0]:
+        return
+    cur.execute("SELECT id FROM posts WHERE board IN ('humor','life') ORDER BY id LIMIT 3")
+    os.makedirs(Config.UPLOAD_DIR, exist_ok=True)
+    for (pid,) in cur.fetchall():
+        try:
+            r = requests.get(f"https://picsum.photos/seed/walga{pid}/800/600.jpg", timeout=10)
+            if r.ok and r.content[:2] == b"\xff\xd8":
+                open(os.path.join(Config.UPLOAD_DIR, f"{pid}.jpg"), "wb").write(r.content)
+                cur.execute("UPDATE posts SET has_image=1 WHERE id=%s", (pid,))
+        except Exception:
+            pass
+
+
 def main():
     c = pymysql.connect(host=Config.DB_HOST, port=Config.DB_PORT, user=Config.DB_USER, password=Config.DB_PASSWORD,
                         database=Config.DB_NAME, charset="utf8mb4", autocommit=True, init_command="SET time_zone='+09:00'")
@@ -80,6 +99,7 @@ def main():
         for t, s, main_, part in TODAY:
             cur.execute("INSERT INTO issues(title, summary, category, is_main, open_date, yes_cnt, no_cnt, slug) VALUES(%s,%s,'사회',%s,CURDATE(),%s,%s,%s)",
                         (t, s, main_, part // 2, part - part // 2, slugify(t)))
+    add_images(cur)
     cur.execute("SELECT COUNT(*) FROM issues WHERE closed=1")
     if cur.fetchone()[0]:
         print("오늘 이슈만 갱신함 (글·아카이브는 이미 있음)" if has_posts else "")

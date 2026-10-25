@@ -167,6 +167,15 @@ assert db("SELECT pinned FROM news WHERE id=1")[0] == 0
 anon.post("/admin/news/1/delete", headers=auth)
 assert db("SELECT COUNT(*) FROM news")[0] == 0
 
+# 15. 사이드바 위젯: 2단 페이지엔 오늘의 투표·실시간 왈베·뉴스 위젯 + 로그인 카드, 1단 페이지엔 없음
+html = anon.get("/board/free").get_data(as_text=True)
+assert "오늘의 투표" in html and "실시간 왈베" in html and 'class="card login"' in html and "wlist" in html
+assert anon.post("/vote", data={"issue_id": 2, "choice": 1}).status_code == 302
+assert "투표 완료" in anon.get("/board/humor").get_data(as_text=True), "투표한 방문자는 위젯에도 완료 표시"
+assert "오늘의 투표" in anon.get("/post/1").get_data(as_text=True) or anon.get("/post/1").status_code == 404
+assert "오늘의 투표" not in anon.get("/write?board=free").get_data(as_text=True)
+assert 'class="card profile"' in user.get("/board/free").get_data(as_text=True)
+
 # 8. 삭제: 비밀번호 틀림 403, 맞으면 삭제 / 회원 글은 본인만
 assert anon.post("/comment/1/delete", data={"pw": "9999"}).status_code == 403
 assert anon.post("/comment/1/delete", data={"pw": "0000"}).get_json()["ok"]

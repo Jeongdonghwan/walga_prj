@@ -162,7 +162,21 @@ def next_level_gap(points):
 
 @app.context_processor
 def _ctx():
-    return {"BOARDS": BOARDS, "nick": session.get("nick"), "AD_ENABLED": app.config["AD_ENABLED"]}
+    return {"BOARDS": BOARDS, "nick": session.get("nick"), "AD_ENABLED": app.config["AD_ENABLED"], "side_data": side_data}
+
+
+def side_data():
+    """사이드바 위젯 데이터. 템플릿이 호출할 때만 실행 (1단 페이지는 비용 없음)."""
+    today = now_kst().date()
+    user = m.one("SELECT *, DATEDIFF(CURDATE(), created_at)+1 days FROM users WHERE id=%s", (session["uid"],)) if session.get("uid") else None
+    main = m.one(f"SELECT {ISSUE_OPEN_COLS} FROM issues WHERE open_date=%s AND is_main=1 AND closed=0 AND approved=1 LIMIT 1", (today,))
+    issues = m.rows(f"SELECT {ISSUE_OPEN_COLS} FROM issues WHERE open_date=%s AND is_main=0 AND closed=0 AND approved=1 ORDER BY id LIMIT 5", (today,))
+    best = [{"url": f"/post/{p['id']}", "title": p["title"], "img": f"/static/uploads/{p['id']}.jpg" if p["has_image"] else None,
+             "sub": p["cmt_cnt"] or None}
+            for p in m.rows("SELECT id, title, has_image, cmt_cnt FROM posts WHERE is_best=1 AND status=1 ORDER BY best_at DESC, id DESC LIMIT 24")]
+    news = [{"url": n["url"], "title": n["title"], "img": n["image"], "sub": n["source"], "ext": True}
+            for n in m.rows("SELECT url, title, image, source FROM news ORDER BY pinned DESC, id DESC LIMIT 16")]
+    return {"user": user, "main": main, "main_voted": my_vote(main["id"]) if main else None, "issues": issues, "best": best, "news": news}
 
 
 def paging(total):
@@ -333,6 +347,7 @@ def home():
     user = m.one("SELECT *, DATEDIFF(CURDATE(), created_at)+1 days FROM users WHERE id=%s", (session["uid"],)) if session.get("uid") else None
     return render_template("home.html", main_issue=main_issue, main_voted=main_voted, issues=issues, results=results,
                            best=best, free=free, news=news, posts=posts, sort=sort, page=page, pages=pages, user=user,
+                           side_best=side_data()["best"],
                            today_label=f"{today.month}월 {today.day}일", y_label=f"{yday.month}월 {yday.day}일")
 
 

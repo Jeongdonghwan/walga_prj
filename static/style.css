@@ -339,6 +339,41 @@ ul{list-style:none}
 .card.profile form{margin-left:auto}
 .card.profile button{font-size:12.5px;color:var(--faint)}
 
+/* 사이드 위젯 (썸네일 2 + 목록 + 페이지 넘김) */
+.widget{padding:0}
+.widget .wh{display:flex;align-items:center;gap:8px;padding:11px 14px;border-bottom:1px solid var(--line);font-size:14.5px;font-weight:800}
+.widget .wh .more{margin-left:auto;font-size:12px;color:var(--sub);font-weight:600}
+.widget .wh .more+.wpager{margin-left:0}
+.widget .wpager{margin-left:auto;display:flex;align-items:center;gap:2px}
+.widget .wnum{font-size:12px;color:var(--faint);font-weight:600;margin-right:4px;font-variant-numeric:tabular-nums}
+.widget .wprev,.widget .wnext{width:22px;height:22px;border:1px solid var(--line2);border-radius:3px;font-size:14px;line-height:1;color:var(--sub);display:flex;align-items:center;justify-content:center}
+.widget .wprev:hover,.widget .wnext:hover{background:var(--surface);color:var(--text)}
+.widget .wthumbs{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:12px 14px 4px}
+.widget .wthumbs a{display:block;min-width:0}
+.widget .wthumbs img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;border-radius:4px;background:var(--surface);border:1px solid var(--line)}
+.widget .wthumbs span{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-top:6px;font-size:12.5px;font-weight:600;line-height:1.35;word-break:keep-all}
+.widget .wthumbs a:hover span{color:var(--brand)}
+.widget .wlist{padding:8px 14px 10px}
+.widget .wlist li{display:flex;align-items:baseline;gap:8px;padding:4px 0;font-size:13px}
+.widget .wlist .no{flex:none;width:14px;font-size:12px;font-weight:800;color:var(--brand)}
+.widget .wlist li:nth-child(n+4) .no{color:var(--faint)}
+.widget .wlist a{display:flex;align-items:baseline;gap:6px;min-width:0;flex:1}
+.widget .wlist .txt{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
+.widget .wlist a:hover .txt{color:var(--brand)}
+.widget .wlist .sub{margin-left:auto;flex:none;font-size:11.5px;color:var(--faint)}
+.widget .wempty{padding:20px;text-align:center;color:var(--faint);font-size:13px}
+.wissue .wq{display:block;padding:12px 14px 0;font-size:14px;font-weight:700;line-height:1.4;word-break:keep-all}
+.wissue .wq:hover{color:var(--brand)}
+.wissue .wbtns{display:flex;flex-direction:row;gap:6px;padding:10px 14px 0}
+.wissue .wbtns button{flex:1;height:36px;padding:0;border:1.5px solid var(--line2);border-radius:5px;background:#fff;font-size:13.5px;font-weight:800;line-height:1}
+.wissue .wbtns .yes{color:var(--brand)}
+.wissue .wbtns .no{color:var(--hot)}
+.wissue .wbtns .yes:hover{border-color:var(--brand)}
+.wissue .wbtns .no:hover{border-color:var(--hot)}
+.wissue .wdone{display:flex;align-items:center;gap:5px;margin:10px 14px 0;padding:8px;background:var(--brand-soft);color:var(--brand);border-radius:5px;font-size:12.5px;font-weight:700}
+.wissue .wm{padding:6px 14px 4px;font-size:11.5px;color:var(--faint);border-bottom:1px solid var(--line)}
+.wissue .wlist{padding-top:8px}
+
 /* 어제의 결과 */
 .res li{padding:10px 0;border-bottom:1px solid var(--line)}
 .res li:first-child{padding-top:2px}

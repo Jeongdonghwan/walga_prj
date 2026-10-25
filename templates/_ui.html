@@ -4,6 +4,90 @@
 
 {% macro ic(name, size=14) %}<svg class="ic" width="{{ size }}" height="{{ size }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{% if name == 'cmt' %}<path d="M21 12a8 8 0 0 1-8 8H8l-5 3 1.2-4A8 8 0 1 1 21 12z"/>{% elif name == 'rec' %}<path d="M7 10v11H3V10zM7 10l4-7a2.2 2.2 0 0 1 2.2 2.6L12.5 10H19a2 2 0 0 1 2 2.4l-1.7 7a2 2 0 0 1-2 1.6H7"/>{% elif name == 'img' %}<rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/>{% elif name == 'eye' %}<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>{% elif name == 'flag' %}<path d="M4 22V4a1 1 0 0 1 1-1h12l-2 5 2 5H5"/>{% elif name == 'lock' %}<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>{% elif name == 'check' %}<path d="m5 12 5 5L20 7"/>{% endif %}</svg>{% endmacro %}
 
+{# ─── 사이드바 위젯 (디시 우측 위젯 방식: 썸네일 2 + 순위 목록 + 페이지 넘김) ─── #}
+{% macro login_card(user) %}
+{% if user %}
+<div class="card profile">
+  <span class="av c{{ user.nickname|avc }}">{{ user.nickname[0] }}</span>
+  <div class="info"><b>{{ user.nickname }} <span class="lv">Lv.{{ user.points|lv }}</span></b><small>왈가력 {{ user.days }}일차 · {{ user.points|comma }}P</small></div>
+  <form method="post" action="/logout"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button>로그아웃</button></form>
+</div>
+{% else %}
+<div class="card login">
+  <p class="lt">왈가 시작하기</p>
+  <p class="ls">투표하고 토론하고, 연속 투표로 포인트 쌓기</p>
+  <form method="post" action="/login?next={{ request.path }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input name="nickname" placeholder="닉네임" maxlength="12" required>
+    <input name="password" type="password" placeholder="비밀번호" required>
+    <button class="btn full">로그인</button>
+  </form>
+  <div class="lrow"><a href="/signup">회원가입</a><a class="ghost" href="/write?board=free">가입 없이 글쓰기</a></div>
+</div>
+{% endif %}
+{% endmacro %}
+
+{# 썸네일 2개 + 목록. items: [{url, title, img, sub}]. 페이지당 8개(썸네일 포함) #}
+{% macro widget(title, items, more=None, per=8) %}
+{% set pages = (items|length / per)|round(0, 'ceil')|int %}
+<div class="card widget" {% if pages > 1 %}data-pages="{{ pages }}"{% endif %}>
+  <div class="wh"><b>{{ title }}</b>{% if more %}<a class="more" href="{{ more }}">더보기</a>{% endif %}{% if pages > 1 %}<span class="wpager"><span class="wnum">1/{{ pages }}</span><button type="button" class="wprev" aria-label="이전">‹</button><button type="button" class="wnext" aria-label="다음">›</button></span>{% endif %}</div>
+  {% for p in range(pages) %}
+  {% set chunk = items[p * per:(p + 1) * per] %}
+  {% set thumbs = chunk|selectattr('img')|list %}
+  {% set thumbs = thumbs[:2] if p == 0 else [] %}
+  <div class="wpage" {% if p %}hidden{% endif %}>
+    {% if thumbs %}
+    <div class="wthumbs">
+      {% for t in thumbs %}<a href="{{ t.url }}" {% if t.ext %}target="_blank" rel="noopener"{% endif %}><img src="{{ t.img }}" alt="" loading="lazy" referrerpolicy="no-referrer"><span>{{ t.title }}</span></a>{% endfor %}
+    </div>
+    {% endif %}
+    <ul class="wlist">
+      {% for it in chunk if it not in thumbs %}
+      <li><span class="no">{{ loop.index + thumbs|length }}</span><a href="{{ it.url }}" {% if it.ext %}target="_blank" rel="noopener"{% endif %}><span class="txt">{{ it.title }}</span>{% if it.sub %}<span class="sub">{{ it.sub }}</span>{% endif %}</a></li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endfor %}
+  {% if not items %}<p class="wempty">아직 없음</p>{% endif %}
+</div>
+{% endmacro %}
+
+{# 오늘의 투표 위젯: 메인 이슈 미니 투표 + 나머지 이슈 #}
+{% macro widget_issues(d) %}
+<div class="card widget wissue">
+  <div class="wh"><b>오늘의 투표</b><a class="more" href="/issue">전체</a></div>
+  {% if d.main %}
+  <a class="wq" href="/issue/{{ d.main.id }}/{{ d.main.slug or '' }}">{{ d.main.title }}</a>
+  {% if d.main_voted is not none %}
+  <p class="wdone">{{ ic('check', 13) }}투표 완료 · 결과 23:59 공개</p>
+  {% else %}
+  <form class="wbtns" method="post" action="/vote">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="issue_id" value="{{ d.main.id }}">
+    <button class="yes" name="choice" value="1">{{ d.main.opt_yes }}</button>
+    <button class="no" name="choice" value="0">{{ d.main.opt_no }}</button>
+  </form>
+  {% endif %}
+  <p class="wm">{{ d.main.part|comma }}명 참여 중</p>
+  {% endif %}
+  <ul class="wlist">
+    {% for i in d.issues %}<li><span class="no">{{ loop.index }}</span><a href="/issue/{{ i.id }}/{{ i.slug or '' }}"><span class="txt">{{ i.title }}</span><span class="sub">{{ i.part|comma }}</span></a></li>
+    {% else %}{% if not d.main %}<li class="wempty">오늘 이슈가 아직 안 올라옴</li>{% endif %}{% endfor %}
+  </ul>
+</div>
+{% endmacro %}
+
+{# 기본 사이드바 (홈 제외 모든 2단 페이지) #}
+{% macro sidebar() %}
+{% set d = side_data() %}
+{{ login_card(d.user) }}
+{{ widget_issues(d) }}
+{{ widget('실시간 왈베', d.best, '/best') }}
+{{ widget('뉴스', d.news, '/news') }}
+{{ ad('ad-side', '사이드 광고 300×250') }}
+{% endmacro %}
+
 {# 댓글 1건 #}
 {% macro cmt(c, reply=False) %}
 <li class="cmt{{ ' reply' if reply }}" id="c{{ c.id }}">

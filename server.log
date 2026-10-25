@@ -120,3 +120,88 @@ Press CTRL+C to quit
  * Restarting with stat
  * Debugger is active!
  * Debugger PIN: 103-551-591
+ * Detected change in 'C:\\side_Prj\\walga_prj\\test_smoke.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 103-551-591
+127.0.0.1 - - [25/Oct/2026 17:45:42] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [25/Oct/2026 17:45:43] "GET /static/app.js HTTP/1.1" 200 -
+127.0.0.1 - - [25/Oct/2026 17:45:43] "GET /static/style.css HTTP/1.1" 200 -
+127.0.0.1 - - [25/Oct/2026 17:45:44] "GET /static/favicon.ico HTTP/1.1" 200 -
+127.0.0.1 - - [25/Oct/2026 17:47:30] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [25/Oct/2026 17:47:30] "GET /static/style.css HTTP/1.1" 200 -
+127.0.0.1 - - [25/Oct/2026 17:47:30] "GET /static/app.js HTTP/1.1" 200 -
+127.0.0.1 - - [25/Oct/2026 17:47:30] "GET /static/favicon.ico HTTP/1.1" 200 -
+127.0.0.1 - - [25/Oct/2026 17:50:55] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [25/Oct/2026 17:50:55] "GET /static/style.css HTTP/1.1" 304 -
+127.0.0.1 - - [25/Oct/2026 17:50:55] "GET /static/app.js HTTP/1.1" 304 -
+127.0.0.1 - - [25/Oct/2026 17:50:55] "GET /static/favicon.ico HTTP/1.1" 304 -
+127.0.0.1 - - [25/Oct/2026 17:50:56] "GET /signup HTTP/1.1" 200 -
+127.0.0.1 - - [25/Oct/2026 17:50:56] "GET /static/style.css HTTP/1.1" 304 -
+127.0.0.1 - - [25/Oct/2026 17:50:56] "GET /static/app.js HTTP/1.1" 304 -
+127.0.0.1 - - [25/Oct/2026 17:50:57] "GET /write?board=free HTTP/1.1" 200 -
+127.0.0.1 - - [25/Oct/2026 17:50:57] "GET /static/style.css HTTP/1.1" 304 -
+127.0.0.1 - - [25/Oct/2026 17:50:57] "GET /static/app.js HTTP/1.1" 304 -
+127.0.0.1 - - [25/Oct/2026 17:51:00] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [25/Oct/2026 17:51:00] "GET /static/style.css HTTP/1.1" 304 -
+127.0.0.1 - - [25/Oct/2026 17:51:00] "GET /static/app.js HTTP/1.1" 304 -
+127.0.0.1 - - [25/Oct/2026 17:51:01] "GET /issue HTTP/1.1" 200 -
+127.0.0.1 - - [25/Oct/2026 17:51:01] "GET /static/style.css HTTP/1.1" 304 -
+127.0.0.1 - - [25/Oct/2026 17:51:01] "GET /static/app.js HTTP/1.1" 304 -
+127.0.0.1 - - [25/Oct/2026 17:51:04] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [25/Oct/2026 17:51:04] "GET /static/style.css HTTP/1.1" 304 -
+127.0.0.1 - - [25/Oct/2026 17:51:04] "GET /static/app.js HTTP/1.1" 304 -
+127.0.0.1 - - [25/Oct/2026 17:51:08] "GET /board/humor HTTP/1.1" 200 -
+127.0.0.1 - - [25/Oct/2026 17:51:08] "GET /static/style.css HTTP/1.1" 304 -
+127.0.0.1 - - [25/Oct/2026 17:51:08] "GET /static/app.js HTTP/1.1" 304 -
+127.0.0.1 - - [25/Oct/2026 17:51:10] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [25/Oct/2026 17:51:10] "GET /static/style.css HTTP/1.1" 304 -
+127.0.0.1 - - [25/Oct/2026 17:51:10] "GET /static/app.js HTTP/1.1" 304 -
+ * Detected change in 'C:\\side_Prj\\walga_prj\\app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 103-551-591
+ * Detected change in 'C:\\side_Prj\\walga_prj\\app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 103-551-591
+ * Detected change in 'C:\\side_Prj\\walga_prj\\seed.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 103-551-591
+ * Detected change in 'C:\\side_Prj\\walga_prj\\test_smoke.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 103-551-591
+127.0.0.1 - - [25/Oct/2026 17:53:37] "GET /board/humor HTTP/1.1" 200 -
+127.0.0.1 - - [25/Oct/2026 17:53:37] "GET /static/uploads/3.jpg HTTP/1.1" 200 -
+127.0.0.1 - - [25/Oct/2026 17:53:37] "GET /static/uploads/1.jpg HTTP/1.1" 200 -
+127.0.0.1 - - [25/Oct/2026 17:53:37] "GET /static/style.css HTTP/1.1" 200 -
+127.0.0.1 - - [25/Oct/2026 17:53:37] "GET /static/app.js HTTP/1.1" 200 -
+127.0.0.1 - - [25/Oct/2026 17:53:39] "GET /static/favicon.ico HTTP/1.1" 200 -
+127.0.0.1 - - [25/Oct/2026 17:53:42] "GET /post/1 HTTP/1.1" 200 -
+127.0.0.1 - - [25/Oct/2026 17:53:42] "GET /static/app.js HTTP/1.1" 304 -
+127.0.0.1 - - [25/Oct/2026 17:53:42] "GET /static/style.css HTTP/1.1" 304 -
+127.0.0.1 - - [25/Oct/2026 17:53:42] "GET /static/uploads/1.jpg HTTP/1.1" 304 -
+127.0.0.1 - - [25/Oct/2026 17:53:42] "GET /static/uploads/3.jpg HTTP/1.1" 304 -
+127.0.0.1 - - [25/Oct/2026 17:53:42] "GET /static/favicon.ico HTTP/1.1" 200 -
+127.0.0.1 - - [25/Oct/2026 17:53:44] "GET /issue HTTP/1.1" 200 -
+127.0.0.1 - - [25/Oct/2026 17:53:44] "GET /static/style.css HTTP/1.1" 304 -
+127.0.0.1 - - [25/Oct/2026 17:53:44] "GET /static/app.js HTTP/1.1" 304 -
+127.0.0.1 - - [25/Oct/2026 17:53:44] "GET /static/uploads/3.jpg HTTP/1.1" 304 -
+127.0.0.1 - - [25/Oct/2026 17:53:44] "GET /static/uploads/1.jpg HTTP/1.1" 304 -
+127.0.0.1 - - [25/Oct/2026 17:53:46] "GET /board/humor HTTP/1.1" 200 -
+127.0.0.1 - - [25/Oct/2026 17:53:46] "GET /static/uploads/3.jpg HTTP/1.1" 200 -
+127.0.0.1 - - [25/Oct/2026 17:53:46] "GET /static/uploads/1.jpg HTTP/1.1" 200 -
+127.0.0.1 - - [25/Oct/2026 17:53:46] "GET /static/style.css HTTP/1.1" 200 -
+127.0.0.1 - - [25/Oct/2026 17:53:46] "GET /static/app.js HTTP/1.1" 200 -
+ * Detected change in 'C:\\side_Prj\\walga_prj\\test_smoke.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 103-551-591
+127.0.0.1 - - [25/Oct/2026 17:55:17] "GET /board/humor HTTP/1.1" 200 -
+127.0.0.1 - - [25/Oct/2026 17:55:17] "GET /static/uploads/1.jpg HTTP/1.1" 200 -
+127.0.0.1 - - [25/Oct/2026 17:55:17] "GET /static/style.css HTTP/1.1" 200 -
+127.0.0.1 - - [25/Oct/2026 17:55:17] "GET /static/app.js HTTP/1.1" 200 -
+127.0.0.1 - - [25/Oct/2026 17:55:18] "GET /static/uploads/3.jpg HTTP/1.1" 200 -
+127.0.0.1 - - [25/Oct/2026 17:55:19] "GET /static/favicon.ico HTTP/1.1" 200 -

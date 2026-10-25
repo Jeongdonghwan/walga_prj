@@ -1,8 +1,7 @@
 {% extends "base.html" %}
-{% from "_ui.html" import ad, ic, rows with context %}
+{% from "_ui.html" import ad, ic, rows, login_card, widget with context %}
 {% from "_news.html" import news_grid with context %}
 {% set nav = 'home' %}
-{% set two_col = True %}
 {% block body %}
 <main>
   {% if main_issue %}
@@ -71,27 +70,11 @@
     </div>{% endif %}
   </div>
 </main>
+{% endblock %}
 
+{% block side %}
 <aside class="side">
-  {% if user %}
-  <div class="card profile">
-    <span class="av c{{ user.nickname|avc }}">{{ user.nickname[0] }}</span>
-    <div class="info"><b>{{ user.nickname }} <span class="lv">Lv.{{ user.points|lv }}</span></b><small>왈가력 {{ user.days }}일차 · {{ user.points|comma }}P</small></div>
-    <form method="post" action="/logout"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button>로그아웃</button></form>
-  </div>
-  {% else %}
-  <div class="card login">
-    <p class="lt">왈가 시작하기</p>
-    <p class="ls">투표하고 토론하고, 연속 투표로 포인트 쌓기</p>
-    <form method="post" action="/login?next=/">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <input name="nickname" placeholder="닉네임" maxlength="12" required>
-      <input name="password" type="password" placeholder="비밀번호" required>
-      <button class="btn full">로그인</button>
-    </form>
-    <div class="lrow"><a href="/signup">회원가입</a><a class="ghost" href="/write?board=free">가입 없이 글쓰기</a></div>
-  </div>
-  {% endif %}
+  {{ login_card(user) }}
 
   {% if results %}
   <div class="card">
@@ -108,14 +91,7 @@
   </div>
   {% endif %}
 
-  {% if best %}
-  <div class="card">
-    <div class="ch">실시간 왈가베스트</div>
-    <ul class="rank">
-      {% for p in best %}<li><span class="no">{{ loop.index }}</span><a class="t" href="/post/{{ p.id }}">{{ p.title }}</a>{% if p.cmt_cnt %}<span class="c">{{ ic('cmt', 12) }}{{ p.cmt_cnt }}</span>{% endif %}</li>{% endfor %}
-    </ul>
-  </div>
-  {% endif %}
+  {{ widget('실시간 왈베', side_best, '/best') }}
 
   {{ ad('ad-side', '사이드 광고 300×250') }}
 

@@ -10,6 +10,16 @@ async function post(url, data) {
   return r.json().catch(() => ({ ok: false }));
 }
 
+// 사이드 위젯 페이지 넘김 (디시 우측 위젯 방식)
+document.querySelectorAll('.widget[data-pages]').forEach(w => {
+  const pages = [...w.querySelectorAll('.wpage')];
+  const num = w.querySelector('.wnum');
+  let i = 0;
+  const show = () => { pages.forEach((p, k) => { p.hidden = k !== i; }); num.textContent = (i + 1) + '/' + pages.length; };
+  w.querySelector('.wprev').onclick = () => { i = (i - 1 + pages.length) % pages.length; show(); };
+  w.querySelector('.wnext').onclick = () => { i = (i + 1) % pages.length; show(); };
+});
+
 document.addEventListener('click', async e => {
   const b = e.target.closest('[data-rec],[data-report],[data-del],[data-reply],[data-reply-cancel]');
   if (!b) return;
