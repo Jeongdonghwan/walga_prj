@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""뉴스 RSS → Claude(Haiku)로 오늘의 이슈 6개(메인 1 + 일반 5) 생성.
+"""뉴스 RSS → Claude(Opus 5.5)로 오늘의 이슈 6개(메인 1 + 일반 5) 생성.
 호출: `flask --app app gen-issues` (cron) 또는 어드민 '오늘 이슈 뽑기' 버튼."""
 import json
 import re
@@ -12,7 +12,7 @@ FEEDS = [  # Google News 한국판 RSS (키 불필요). ponytail: 네이버 뉴�
     "https://news.google.com/rss/headlines/section/topic/NATION?hl=ko&gl=KR&ceid=KR:ko",
     "https://news.google.com/rss/headlines/section/topic/BUSINESS?hl=ko&gl=KR&ceid=KR:ko",
 ]
-MODEL = "claude-haiku-5-5"
+MODEL = "claude-opus-5-5"
 
 SYSTEM = """너는 한국 커뮤니티 '왈가'의 이슈 에디터다. 왈가는 매일 이슈 하나에 찬반 투표를 받고, 마감 후 결과를 공개하는 서비스다.
 오늘 뉴스 헤드라인을 받아서 투표할 만한 이슈를 고르고 아래 JSON만 출력한다. 설명이나 코드펜스 없이 JSON 객체 하나만.

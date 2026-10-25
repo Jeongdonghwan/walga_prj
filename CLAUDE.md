@@ -53,7 +53,7 @@ attendance(id PK, user_id FK, date DATE, UNIQ(user_id,date))
 
 ## 배치 (타이머 없음 — 2026-10 결정)
 1. **마감**: APScheduler 대신 **지연 마감**. `close_due_issues()`가 홈/이슈/투표/마이 요청 시 `open_date < 오늘`인 이슈를 닫고(= 23:59 경과) 다수파 적중 +10P 지급 + 결과 카드 생성. 동시 요청은 rowcount로 1회만
-2. **이슈 생성**: `issue_gen.py` — Google News RSS → Claude(claude-haiku-5-5) → 메인 1 + 이슈 5 (커뮤 말투, 찬반 라벨). admin 「오늘 이슈 뽑기」 버튼 또는 cron `30 7 * * * cd /var/www/walga && ./venv/bin/flask --app app gen-issues`. 기본 승인 대기(`approved=0`), `AUTO_PUBLISH=1`이면 바로 게시
+2. **이슈 생성**: `issue_gen.py` — Google News RSS → Claude(claude-opus-5-5) → 메인 1 + 이슈 5 (커뮤 말투, 찬반 라벨). admin 「오늘 이슈 뽑기」 버튼 또는 cron `30 7 * * * cd /var/www/walga && ./venv/bin/flask --app app gen-issues`. 기본 승인 대기(`approved=0`), `AUTO_PUBLISH=1`이면 바로 게시
 3. **결과 카드**: 마감 시 Pillow로 1200×630 생성(제목+게이지+"다음 판: 왈가에서") → /static/cards/<id>.png, 마감 이슈 og:image로 사용. 폰트 static/fonts/Pretendard-Bold.otf
 
 ## 광고
