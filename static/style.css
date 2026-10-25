@@ -5,6 +5,7 @@
   --brand:#0e7c6f; --brand-soft:#e6f4f1; --brand-dark:#0a6358;
   --hot:#e5493a; --hot-soft:#fdeeec;
   --blue:#3b6ea5;
+  --meet:#d97706; --meet-soft:#fff4e0;
   --r:8px; --r2:6px;
 }
 *{margin:0;padding:0;box-sizing:border-box}
@@ -57,7 +58,10 @@ ul{list-style:none}
 .gnb a:hover{color:var(--text)}
 .gnb a.on{color:var(--text);font-weight:800;border-color:var(--text)}
 .gnb .div{width:1px;height:14px;background:var(--line2);margin:0 6px}
-.gnb .write{margin-left:auto;height:32px;padding:0 14px;background:var(--brand);color:#fff;font-size:13px;font-weight:700;border-radius:5px;border-bottom:none;display:flex;align-items:center;margin-bottom:0}
+.gnb .meet{margin-left:auto;display:flex;align-items:center;gap:5px;color:var(--meet);font-weight:800;border-bottom-color:transparent}
+.gnb .meet:hover{color:var(--meet)}
+.gnb .meet.on{color:var(--meet);border-color:var(--meet)}
+.gnb .write{margin-left:8px;height:32px;padding:0 14px;background:var(--brand);color:#fff;font-size:13px;font-weight:700;border-radius:5px;border-bottom:none;display:flex;align-items:center;margin-bottom:0}
 .gnb .write:hover{background:var(--brand-dark);color:#fff}
 
 /* ─── 상단바 (모바일) ─── */
@@ -471,6 +475,8 @@ ul{list-style:none}
 .nav{display:none;position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--line);padding:8px 4px calc(8px + env(safe-area-inset-bottom));z-index:30}
 .nav a{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10.5px;font-weight:700;color:var(--faint)}
 .nav a.on{color:var(--brand)}
+.nav a.meet{color:var(--meet);opacity:.75}
+.nav a.meet.on{opacity:1}
 
 /* ═══ 모바일 ═══ */
 @media(max-width:960px){
