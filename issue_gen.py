@@ -45,8 +45,8 @@ def parse_rss(xml_bytes, source=None):
     for item in ET.fromstring(xml_bytes).iter("item"):
         title = re.sub(r"\s+", " ", (item.findtext("title") or "")).strip()
         link = (item.findtext("link") or "").strip()
-        if not title or not link.startswith("http"):
-            continue
+        if not link.startswith("http") or len(title) < 8 or len(re.findall(r"[가-힣]", title)) < 4:
+            continue  # 방송 코너명('클로징'), 외국어판 기사 제외
         img = None
         for e in item.iter():
             tag = e.tag.rsplit("}", 1)[-1]
