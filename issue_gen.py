@@ -7,11 +7,18 @@ import xml.etree.ElementTree as ET
 
 import requests
 
-FEEDS = [  # Google News 한국판 RSS (키 불필요). ponytail: 네이버 뉴스는 공식 RSS가 없어 생략
-    "https://news.google.com/rss?hl=ko&gl=KR&ceid=KR:ko",
-    "https://news.google.com/rss/headlines/section/topic/NATION?hl=ko&gl=KR&ceid=KR:ko",
-    "https://news.google.com/rss/headlines/section/topic/BUSINESS?hl=ko&gl=KR&ceid=KR:ko",
-]
+FEEDS = {  # 언론사 공식 RSS (원문 링크·이미지 확보 가능). Google News는 리다이렉트 링크라 썸네일을 못 얻어 제외
+    "한겨레": "https://www.hani.co.kr/rss/",
+    "경향신문": "https://www.khan.co.kr/rss/rssdata/total_news.xml",
+    "동아일보": "https://rss.donga.com/total.xml",
+    "매일경제": "https://www.mk.co.kr/rss/30000001/",
+    "JTBC": "https://fs.jtbc.co.kr/RSS/newsflash.xml",
+    "조선일보": "https://www.chosun.com/arc/outboundfeeds/rss/?outputType=xml",
+    "SBS": "https://news.sbs.co.kr/news/newsflashRssFeed.do?plink=RSSREADER",
+    "오마이뉴스": "https://rss.ohmynews.com/rss/ohmynews.xml",
+    "한국경제": "https://www.hankyung.com/feed/all-news",
+}
+HEADERS = {"User-Agent": "Mozilla/5.0 walga/1.0"}
 MODEL = "claude-opus-5-5"
 
 SYSTEM = """너는 한국 커뮤니티 '왈가'의 이슈 에디터다. 왈가는 매일 이슈 하나에 찬반 투표를 받고, 마감 후 결과를 공개하는 서비스다.
@@ -32,31 +39,53 @@ SYSTEM = """너는 한국 커뮤니티 '왈가'의 이슈 에디터다. 왈가�
 USER = "오늘 헤드라인 {n}개:\n{lines}\n\n위 규칙대로 JSON만 출력."
 
 
-def parse_rss(xml_bytes):
-    """RSS → [{title, url, source}]. 제목 끝의 ' - 매체명'은 떼고 source로."""
+def parse_rss(xml_bytes, source=None):
+    """RSS → [{title, url, source, image}]. 이미지는 media:content/thumbnail/enclosure/description의 <img> 순."""
     out = []
     for item in ET.fromstring(xml_bytes).iter("item"):
-        raw = (item.findtext("title") or "").strip()
+        title = re.sub(r"\s+", " ", (item.findtext("title") or "")).strip()
         link = (item.findtext("link") or "").strip()
-        src = (item.findtext("source") or "").strip()
-        mt = re.match(r"^(.*)\s+-\s+([^-]+)$", raw)
-        title = mt.group(1).strip() if mt else raw
-        if title and link:
-            out.append({"title": title[:200], "url": link[:500], "source": (src or (mt.group(2).strip() if mt else ""))[:50] or None})
+        if not title or not link.startswith("http"):
+            continue
+        img = None
+        for e in item.iter():
+            tag = e.tag.rsplit("}", 1)[-1]
+            if tag in ("content", "thumbnail", "enclosure") and (e.get("url") or "").startswith("http") and "image" in (e.get("type") or "image"):
+                img = e.get("url")
+                break
+        if not img:
+            mt = re.search(r'<img[^>]+src="(https?://[^"]+)"', item.findtext("description") or "")
+            img = mt.group(1) if mt else None
+        src = source or (item.findtext("source") or "").strip() or None
+        out.append({"title": title[:200], "url": link[:500], "source": (src or "")[:50] or None, "image": (img or "")[:500] or None})
     return out
 
 
-def fetch_news(limit=30):
-    seen, out = set(), []
-    for url in FEEDS:
+def og_image(url):
+    """기사 페이지의 og:image. 실패하면 None."""
+    try:
+        html = requests.get(url, timeout=6, headers=HEADERS).text[:200000]
+        mt = re.search(r'property=["\']og:image["\']\s+content=["\']([^"\']+)', html) or re.search(r'content=["\']([^"\']+)["\']\s+property=["\']og:image', html)
+        return mt.group(1)[:500] if mt and mt.group(1).startswith("http") else None
+    except Exception:
+        return None
+
+
+def fetch_news(limit=30, per_feed=6):
+    """언론사별 최신 per_feed건씩 라운드로빈으로 섞어서 반환 (한 매체 독식 방지)."""
+    buckets = []
+    for name, url in FEEDS.items():
         try:
-            r = requests.get(url, timeout=10, headers={"User-Agent": "walga/1.0"})
-            for n in parse_rss(r.content):
-                if n["title"] not in seen:
-                    seen.add(n["title"])
-                    out.append(n)
+            r = requests.get(url, timeout=10, headers=HEADERS)
+            buckets.append(parse_rss(r.content, name)[:per_feed])
         except Exception:
             continue
+    out, seen = [], set()
+    for row in zip(*buckets) if buckets else []:
+        for n in row:
+            if n["title"] not in seen:
+                seen.add(n["title"])
+                out.append(n)
     return out[:limit]
 
 

@@ -155,16 +155,19 @@ ul{list-style:none}
 .issue .sh .n{color:var(--brand)}
 .lockbox{display:flex;align-items:center;justify-content:center;gap:8px;padding:16px;margin-top:12px;background:var(--surface);border-radius:6px;font-size:13.5px;color:var(--sub)}
 
-/* ─── 뉴스 ─── */
-.news li{border-bottom:1px solid var(--line)}
-.news a{display:flex;align-items:center;gap:10px;padding:10px 2px;font-size:14.5px;font-weight:500}
-.news a:hover .txt{color:var(--brand)}
-.news .src{flex:none;min-width:52px;font-size:11.5px;font-weight:700;color:var(--sub);background:var(--surface);padding:2px 6px;border-radius:3px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:80px}
-.news .txt{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.news .pin{flex:none;font-size:11px;font-weight:700;color:var(--brand)}
-.news .time{flex:none;font-size:12px;color:var(--faint)}
-.news .empty{color:var(--faint);padding:28px 0;text-align:center;font-size:13.5px}
-.news{margin-bottom:26px}
+/* ─── 뉴스 (갤러리) ─── */
+.ngrid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px 14px;margin-bottom:28px}
+.ngrid a{display:block}
+.ngrid .thumb{display:block;position:relative;aspect-ratio:16/10;border-radius:6px;overflow:hidden;background:var(--surface);border:1px solid var(--line)}
+.ngrid .thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.ngrid .ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:var(--faint);letter-spacing:-0.02em}
+.ngrid .pin{position:absolute;left:8px;top:8px;background:var(--brand);color:#fff;font-size:10.5px;font-weight:800;padding:2px 6px;border-radius:3px}
+.ngrid .tt{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-top:8px;font-size:14px;font-weight:600;line-height:1.4;word-break:keep-all;min-height:2.8em}
+.ngrid a:hover .tt{color:var(--brand)}
+.ngrid .meta{display:flex;gap:6px;margin-top:4px;font-size:11.5px;color:var(--faint)}
+.ngrid .src{color:var(--sub);font-weight:600}
+.ngrid .empty{grid-column:1/-1;color:var(--faint);padding:28px 0;text-align:center;font-size:13.5px}
+.athumb{width:64px;height:40px;object-fit:cover;border-radius:3px;display:block}
 
 /* ─── 마이 ─── */
 .my .card.profile{margin-bottom:12px}
@@ -413,8 +416,8 @@ ul{list-style:none}
   .main-vs .foot{margin-top:12px;justify-content:space-between;font-size:12px}
   .main-vs .foot span+span::before{content:none}
   .main-vs .done{margin-top:0}
-  .results li,.archive .t,.news a{padding-left:16px;padding-right:16px}
-  .news .src{min-width:0}
+  .results li,.archive .t{padding-left:16px;padding-right:16px}
+  .ngrid{grid-template-columns:repeat(2,1fr);gap:16px 12px;padding:0 16px}
   .issue{padding:0 16px}
   .issue h1{font-size:21px}
   .vbox{padding:14px}

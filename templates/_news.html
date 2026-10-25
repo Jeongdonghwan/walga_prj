@@ -1,0 +1,12 @@
+{# 뉴스 갤러리 카드 그리드 #}
+{% macro news_grid(items) %}
+<ul class="ngrid">
+  {% for n in items %}
+  <li><a href="{{ n.url }}" target="_blank" rel="noopener">
+    <span class="thumb">{% if n.image %}<img src="{{ n.image }}" alt="" loading="lazy" referrerpolicy="no-referrer">{% else %}<span class="ph">{{ (n.source or '뉴스')[:4] }}</span>{% endif %}{% if n.pinned %}<span class="pin">운영진 픽</span>{% endif %}</span>
+    <span class="tt">{{ n.title }}</span>
+    <span class="meta"><span class="src">{{ n.source or '뉴스' }}</span><span class="time">{{ n.created_at|ftime }}</span></span>
+  </a></li>
+  {% else %}<li class="empty">아직 뉴스 없음</li>{% endfor %}
+</ul>
+{% endmacro %}

@@ -281,12 +281,18 @@ def cli_gen_issues():
     print(gen_issues_today())
 
 
-def fetch_news_now(limit=20):
-    """RSS 헤드라인을 news 테이블에 적재. URL 중복은 DB UNIQ로 건너뜀."""
+def fetch_news_now(limit=24):
+    """RSS 기사를 news 테이블에 적재. URL 중복은 DB UNIQ로 건너뜀. 새 글 중 이미지 없는 건 og:image 1회 조회."""
     import issue_gen
     n = 0
     for it in issue_gen.fetch_news(limit):
-        n += m.affect("INSERT IGNORE INTO news(title, url, source) VALUES(%s,%s,%s)", (it["title"], it["url"], it["source"]))
+        if not m.affect("INSERT IGNORE INTO news(title, url, source, image) VALUES(%s,%s,%s,%s)", (it["title"], it["url"], it["source"], it["image"])):
+            continue
+        n += 1
+        if not it["image"]:
+            img = issue_gen.og_image(it["url"])
+            if img:
+                m.run("UPDATE news SET image=%s WHERE url=%s", (img, it["url"]))
     return f"뉴스 {n}건 추가"
 
 
@@ -778,8 +784,12 @@ def admin_news():
     if request.method == "POST":
         title, url_ = request.form.get("title", "").strip()[:200], request.form.get("url", "").strip()[:500]
         if title and url_.startswith("http"):
-            m.run("INSERT IGNORE INTO news(title, url, source, pinned) VALUES(%s,%s,%s,%s)",
-                  (title, url_, request.form.get("source", "").strip()[:50] or None, 1 if request.form.get("pinned") else 0))
+            image = request.form.get("image", "").strip()[:500] or None
+            if not image:
+                import issue_gen
+                image = issue_gen.og_image(url_)
+            m.run("INSERT IGNORE INTO news(title, url, source, image, pinned) VALUES(%s,%s,%s,%s,%s)",
+                  (title, url_, request.form.get("source", "").strip()[:50] or None, image, 1 if request.form.get("pinned") else 0))
         else:
             flash("제목과 http로 시작하는 링크가 필요함")
         return redirect(url_for("admin_news"))

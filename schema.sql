@@ -112,6 +112,7 @@ CREATE TABLE IF NOT EXISTS news (
   title VARCHAR(200) NOT NULL,
   url VARCHAR(500) NOT NULL,
   source VARCHAR(50) NULL,                      -- 매체명
+  image VARCHAR(500) NULL,                      -- 썸네일 (RSS 또는 og:image)
   pinned TINYINT NOT NULL DEFAULT 0,            -- 운영진 고정 (상단)
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   UNIQUE KEY uq_url (url(191))

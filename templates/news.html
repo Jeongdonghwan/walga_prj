@@ -1,15 +1,12 @@
 {% extends "base.html" %}
+{% from "_news.html" import news_grid with context %}
 {% set nav = 'news' %}
 {% block title %}뉴스 — 왈가{% endblock %}
 {% block mtitle %}뉴스{% endblock %}
 {% block body %}
 <main>
   <div class="sh pg"><h2>뉴스</h2><span class="date">운영진 픽 + 자동 수집</span></div>
-  <ul class="news">
-    {% for n in items %}
-    <li><a href="{{ n.url }}" target="_blank" rel="noopener"><span class="src">{{ n.source or '뉴스' }}</span><span class="txt">{{ n.title }}</span>{% if n.pinned %}<span class="pin">운영진 픽</span>{% endif %}<span class="time">{{ n.created_at|ftime }}</span></a></li>
-    {% else %}<li class="empty">아직 뉴스 없음</li>{% endfor %}
-  </ul>
+  {{ news_grid(items) }}
   {% if pages > 1 %}{% set s = ((page - 1) // 5) * 5 + 1 %}
   <div class="paging">
     {% if s > 1 %}<a href="?page={{ s - 1 }}">‹</a>{% endif %}
