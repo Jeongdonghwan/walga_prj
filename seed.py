@@ -55,7 +55,8 @@ def add_images(cur):
     cur.execute("SELECT COUNT(*) FROM posts WHERE has_image=1")
     if cur.fetchone()[0]:
         return
-    cur.execute("SELECT id FROM posts WHERE board IN ('humor','life') ORDER BY id LIMIT 3")
+    titles = [t for _, _, t, _, _, _ in POSTS]
+    cur.execute("SELECT id FROM posts WHERE board IN ('humor','life') AND title IN (" + ",".join(["%s"] * len(titles)) + ") ORDER BY id LIMIT 3", titles)
     os.makedirs(Config.UPLOAD_DIR, exist_ok=True)
     for (pid,) in cur.fetchall():
         try:
@@ -65,6 +66,39 @@ def add_images(cur):
                 cur.execute("UPDATE posts SET has_image=1 WHERE id=%s", (pid,))
         except Exception:
             pass
+
+
+MEETUPS = [  # (title, place, days_from_now, "HH:MM", capacity, host, description)
+    ("퇴근 후 한강 러닝 5km (초보 환영)", "뚝섬유원지역 2번 출구", 3, "19:30", 12, "자취만렙", "페이스 7분대로 천천히 뜀. 끝나고 편의점 맥주 한 캔.\n준비물: 운동화, 물."),
+    ("토요일 보드게임 모임", "홍대 레드버튼", 5, "14:00", 8, "도보10분", "스플렌더·카탄·아발론. 룰 다 설명해줌.\n이용료 각자 1만원."),
+    ("월급쟁이 재테크 스터디 1기", "강남역 스터디카페", 9, "20:00", 10, "재테크초보", "월 1회. ETF·연금저축부터 시작.\n책 한 권 같이 읽고 각자 포트폴리오 공유. 영업·보험 권유는 강퇴."),
+    ("주말 등산: 관악산 입문 코스", "사당역 4번 출구", 12, "09:00", None, "짤줍는사람", "왕복 4시간, 정상에서 컵라면.\n등산화 없으면 운동화도 됨."),
+    ("치맥 번개 (끝남)", "건대입구", -4, "19:00", 6, "퇴근요정", "급번개. 선착순."),
+]
+
+
+def add_meetups(cur, uid):
+    """모임 샘플 5개(지난 모임 1개 포함) + 참여자 + 대표 이미지 3장."""
+    import os
+    import requests
+    cur.execute("SELECT COUNT(*) FROM meetups")
+    if cur.fetchone()[0]:
+        return
+    for k, (t, place, days, hm, cap, host, desc) in enumerate(MEETUPS):
+        cur.execute("INSERT INTO meetups(user_id, title, description, place, meet_at, capacity) VALUES(%s,%s,%s,%s,TIMESTAMP(CURDATE()+INTERVAL %s DAY, %s),%s)",
+                    (uid[host], t, desc, place, days, hm + ":00", cap))
+        mid = cur.lastrowid
+        for nick in [host] + random.sample([n for n in MEMBERS if n != host], random.randint(2, 5)):
+            cur.execute("INSERT IGNORE INTO meetup_members(meetup_id, user_id, nick) VALUES(%s,%s,%s)", (mid, uid[nick], nick))
+        if k < 3:
+            try:
+                r = requests.get(f"https://picsum.photos/seed/meet{mid}/800/500.jpg", timeout=10)
+                if r.ok and r.content[:2] == b"\xff\xd8":
+                    os.makedirs(Config.UPLOAD_DIR, exist_ok=True)
+                    open(os.path.join(Config.UPLOAD_DIR, f"m{mid}.jpg"), "wb").write(r.content)
+                    cur.execute("UPDATE meetups SET has_image=1 WHERE id=%s", (mid,))
+            except Exception:
+                pass
 
 
 def main():
@@ -100,6 +134,7 @@ def main():
             cur.execute("INSERT INTO issues(title, summary, category, is_main, open_date, yes_cnt, no_cnt, slug) VALUES(%s,%s,'사회',%s,CURDATE(),%s,%s,%s)",
                         (t, s, main_, part // 2, part - part // 2, slugify(t)))
     add_images(cur)
+    add_meetups(cur, uid)
     cur.execute("SELECT COUNT(*) FROM issues WHERE closed=1")
     if cur.fetchone()[0]:
         print("오늘 이슈만 갱신함 (글·아카이브는 이미 있음)" if has_posts else "")

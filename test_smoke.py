@@ -171,10 +171,39 @@ assert db("SELECT COUNT(*) FROM news")[0] == 0
 html = anon.get("/board/free").get_data(as_text=True)
 assert "오늘의 투표" in html and "실시간 왈베" in html and 'class="card login"' in html and "wlist" in html
 assert anon.post("/vote", data={"issue_id": 2, "choice": 1}).status_code == 302
-assert "투표 완료" in anon.get("/board/humor").get_data(as_text=True), "투표한 방문자는 위젯에도 완료 표시"
-assert "오늘의 투표" in anon.get("/post/1").get_data(as_text=True) or anon.get("/post/1").status_code == 404
+anon.get("/board/humor")  # flash 소비
+assert 'class="wdone"' in anon.get("/board/humor").get_data(as_text=True), "투표한 방문자는 위젯에도 완료 표시"
+assert "오늘의 투표" in anon.get("/post/1").get_data(as_text=True)
 assert "오늘의 투표" not in anon.get("/write?board=free").get_data(as_text=True)
 assert 'class="card profile"' in user.get("/board/free").get_data(as_text=True)
+
+# 16. 모임: 개설(검증), 목록, 참여/취소, 정원, 댓글, 신고 블라인드, 삭제
+from datetime import datetime, timedelta
+soon = (datetime.now() + timedelta(days=3)).strftime("%Y-%m-%dT%H:%M")
+r = anon.post("/meetup/new", data={"title": "러닝", "description": "d", "nick": "모임장", "pw": "1234"})
+assert r.status_code == 200 and "일시" in r.get_data(as_text=True)
+r = anon.post("/meetup/new", data={"title": "한강 러닝", "description": "같이 뜀", "place": "뚝섬", "meet_at": soon, "capacity": 2, "nick": "모임장", "pw": "1234"})
+assert r.status_code == 302 and r.headers["Location"].endswith("/meetup/1")
+html = anon.get("/meetup").get_data(as_text=True)
+assert "한강 러닝" in html and "1/2" in html and "D-3" in html
+html = anon.get("/meetup/1").get_data(as_text=True)
+assert "참여 중" in html and "모임장" in html, "개설자는 자동 참여"
+assert "닉네임을" in anon2.post("/meetup/1/join", follow_redirects=True).get_data(as_text=True)
+assert "참여 완료" in anon2.post("/meetup/1/join", data={"nick": "러너"}, follow_redirects=True).get_data(as_text=True)
+assert "정원이 다 찼음" in user.post("/meetup/1/join", follow_redirects=True).get_data(as_text=True)
+assert "참여 취소함" in anon2.post("/meetup/1/join", follow_redirects=True).get_data(as_text=True)
+assert "참여 완료" in user.post("/meetup/1/join", follow_redirects=True).get_data(as_text=True)
+assert db("SELECT COUNT(*) FROM meetup_members WHERE meetup_id=1")[0] == 2
+assert anon2.post("/comment", data={"target": "meetup", "target_id": 1, "content": "몇 시에 모임?", "nick": "러너", "pw": "0000"}).status_code == 302
+assert "몇 시에 모임?" in anon.get("/meetup/1").get_data(as_text=True)
+for i in range(3):
+    assert client(f"mrep{i}").post("/report", data={"target": "meetup", "target_id": 1}).get_json()["ok"]
+assert "블라인드된 모임" in anon.get("/meetup/1").get_data(as_text=True)
+assert "모임 #1" in anon.get("/admin/blind", headers=auth).get_data(as_text=True)
+anon.post("/admin/blind", headers=auth, data={"target": "meetup", "target_id": 1, "status": 1})
+assert user.post("/meetup/1/delete").status_code == 403, "회원이 유동닉 모임 삭제 불가(비번 없음)"
+assert anon.post("/meetup/1/delete", data={"pw": "1234"}).get_json()["ok"]
+assert anon.get("/meetup/1").status_code == 404 and db("SELECT COUNT(*) FROM meetup_members")[0] == 0
 
 # 8. 삭제: 비밀번호 틀림 403, 맞으면 삭제 / 회원 글은 본인만
 assert anon.post("/comment/1/delete", data={"pw": "9999"}).status_code == 403

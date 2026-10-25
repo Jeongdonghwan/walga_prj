@@ -1,0 +1,23 @@
+{# 모임 카드 그리드 #}
+{% from "_ui.html" import ic with context %}
+{% macro mgrid(items, empty='아직 모임이 없음') %}
+<ul class="mgrid">
+  {% for mt in items %}
+  {% set dd = mt.meet_at|dday %}
+  {% set full = mt.capacity and mt.members >= mt.capacity %}
+  <li class="{{ 'done' if dd == '종료' }}"><a href="/meetup/{{ mt.id }}">
+    <span class="thumb">
+      {% if mt.has_image %}<img src="/static/uploads/m{{ mt.id }}.jpg" alt="" loading="lazy">{% else %}<span class="ph"><b>{{ mt.meet_at.day }}</b><small>{{ mt.meet_at.month }}월</small></span>{% endif %}
+      <span class="dd {{ 'today' if dd == 'D-DAY' else ('over' if dd == '종료') }}">{{ dd }}</span>
+    </span>
+    <span class="tt">{{ mt.title }}</span>
+    <span class="info">{{ ic('cal', 13) }}{{ mt.meet_at|fdt }}</span>
+    <span class="info">{{ ic('pin', 13) }}{{ mt.place or '장소 미정' }}</span>
+    <span class="foot">
+      <span class="host"><span class="av c{{ mt.nick|avc }}">{{ mt.nick[0] }}</span>{{ mt.nick }}</span>
+      <span class="cnt {{ 'full' if full }}">{{ ic('people', 13) }}{{ mt.members }}{% if mt.capacity %}/{{ mt.capacity }}{% endif %}{{ ' 마감' if full }}</span>
+    </span>
+  </a></li>
+  {% else %}<li class="empty">{{ empty }}</li>{% endfor %}
+</ul>
+{% endmacro %}

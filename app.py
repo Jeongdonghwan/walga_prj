@@ -109,8 +109,8 @@ def admin_required(view):
     return wrapped
 
 
-def save_image(file, pid):
-    """업로드 이미지 1장을 static/uploads/<pid>.jpg 로 리사이즈 저장. 성공 시 True."""
+def save_image(file, name):
+    """업로드 이미지 1장을 static/uploads/<name>.jpg 로 리사이즈 저장. 성공 시 True. (글=<id>, 모임=m<id>)"""
     if not file or not file.filename:
         return False
     try:
@@ -118,10 +118,25 @@ def save_image(file, pid):
         img = img.convert("RGB")  # ponytail: GIF 애니 손실. 필요하면 확장자 컬럼 추가해 원본 보존
         img.thumbnail((app.config["IMG_MAX_SIDE"],) * 2)
         os.makedirs(app.config["UPLOAD_DIR"], exist_ok=True)
-        img.save(os.path.join(app.config["UPLOAD_DIR"], f"{pid}.jpg"), "JPEG", quality=85)
+        img.save(os.path.join(app.config["UPLOAD_DIR"], f"{name}.jpg"), "JPEG", quality=85)
         return True
     except Exception:
         return False
+
+
+WEEKDAYS = "월화수목금토일"
+
+
+@app.template_filter("fdt")
+def fdt(dt):
+    """모임 일시: 10/28 (화) 19:30"""
+    return f"{dt.month}/{dt.day} ({WEEKDAYS[dt.weekday()]}) {dt:%H:%M}" if dt else ""
+
+
+@app.template_filter("dday")
+def dday(dt):
+    d = (dt.date() - now_kst().date()).days
+    return "D-DAY" if d == 0 else (f"D-{d}" if d > 0 else "종료")
 
 
 @app.template_filter("nl2br")
@@ -165,15 +180,19 @@ def _ctx():
     return {"BOARDS": BOARDS, "nick": session.get("nick"), "AD_ENABLED": app.config["AD_ENABLED"], "side_data": side_data}
 
 
+def side_best():
+    return [{"url": f"/post/{p['id']}", "title": p["title"], "img": f"/static/uploads/{p['id']}.jpg" if p["has_image"] else None,
+             "sub": p["cmt_cnt"] or None}
+            for p in m.rows("SELECT id, title, has_image, cmt_cnt FROM posts WHERE is_best=1 AND status=1 ORDER BY best_at DESC, id DESC LIMIT 24")]
+
+
 def side_data():
     """사이드바 위젯 데이터. 템플릿이 호출할 때만 실행 (1단 페이지는 비용 없음)."""
     today = now_kst().date()
     user = m.one("SELECT *, DATEDIFF(CURDATE(), created_at)+1 days FROM users WHERE id=%s", (session["uid"],)) if session.get("uid") else None
     main = m.one(f"SELECT {ISSUE_OPEN_COLS} FROM issues WHERE open_date=%s AND is_main=1 AND closed=0 AND approved=1 LIMIT 1", (today,))
     issues = m.rows(f"SELECT {ISSUE_OPEN_COLS} FROM issues WHERE open_date=%s AND is_main=0 AND closed=0 AND approved=1 ORDER BY id LIMIT 5", (today,))
-    best = [{"url": f"/post/{p['id']}", "title": p["title"], "img": f"/static/uploads/{p['id']}.jpg" if p["has_image"] else None,
-             "sub": p["cmt_cnt"] or None}
-            for p in m.rows("SELECT id, title, has_image, cmt_cnt FROM posts WHERE is_best=1 AND status=1 ORDER BY best_at DESC, id DESC LIMIT 24")]
+    best = side_best()
     news = [{"url": n["url"], "title": n["title"], "img": n["image"], "sub": n["source"], "ext": True}
             for n in m.rows("SELECT url, title, image, source FROM news ORDER BY pinned DESC, id DESC LIMIT 16")]
     return {"user": user, "main": main, "main_voted": my_vote(main["id"]) if main else None, "issues": issues, "best": best, "news": news}
@@ -347,7 +366,7 @@ def home():
     user = m.one("SELECT *, DATEDIFF(CURDATE(), created_at)+1 days FROM users WHERE id=%s", (session["uid"],)) if session.get("uid") else None
     return render_template("home.html", main_issue=main_issue, main_voted=main_voted, issues=issues, results=results,
                            best=best, free=free, news=news, posts=posts, sort=sort, page=page, pages=pages, user=user,
-                           side_best=side_data()["best"],
+                           side_best=side_best(),
                            today_label=f"{today.month}월 {today.day}일", y_label=f"{yday.month}월 {yday.day}일")
 
 
@@ -408,6 +427,7 @@ def sitemap():
     urls = [f"{base}/", f"{base}/issue", f"{base}/best"] + [f"{base}/board/{b}" for b in BOARDS]
     urls += [f"{base}/issue/{r['id']}/{r['slug'] or ''}" for r in m.rows("SELECT id, slug FROM issues WHERE approved=1 ORDER BY id DESC LIMIT 2000")]
     urls += [f"{base}/post/{r['id']}" for r in m.rows("SELECT id FROM posts WHERE status=1 ORDER BY id DESC LIMIT 2000")]
+    urls += [f"{base}/meetup/{r['id']}" for r in m.rows("SELECT id FROM meetups WHERE status=1 ORDER BY id DESC LIMIT 500")]
     xml = '<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' + \
           "".join(f"<url><loc>{escape(u)}</loc></url>" for u in urls) + "</urlset>"
     return Response(xml, mimetype="application/xml")
@@ -682,6 +702,10 @@ def comment():
         if my_vote(tid) is None:
             abort(403)
         back = url_for("issue", iid=tid)
+    elif target == "meetup":
+        if not m.one("SELECT 1 FROM meetups WHERE id=%s AND status=1", (tid,)):
+            abort(404)
+        back = url_for("meetup", mid=tid)
     else:
         abort(400)
     try:
@@ -739,7 +763,7 @@ def rec():
 @app.post("/report")
 def report():
     target, tid = request.form.get("target"), request.form.get("target_id", type=int)
-    if target not in ("post", "comment") or not tid:
+    if target not in ("post", "comment", "meetup") or not tid:
         abort(400)
     uid, ah = ident()
     rh = f"u{uid}" if uid else ah
@@ -748,10 +772,136 @@ def report():
               (target, tid, request.form.get("reason", "")[:50], rh))
     except pymysql.err.IntegrityError:
         return jsonify(ok=False, msg="이미 신고함"), 409
-    tbl = "posts" if target == "post" else "comments"
+    tbl = {"post": "posts", "comment": "comments", "meetup": "meetups"}[target]
     m.run(f"UPDATE {tbl} SET status=0 WHERE id=%s AND (SELECT COUNT(*) FROM reports WHERE target=%s AND target_id=%s)>=%s",
           (tid, target, tid, app.config["REPORT_BLIND"]))
     return jsonify(ok=True)
+
+
+# ─── 모임 ───────────────────────────────────────────────
+
+MEETUP_SQL = ("SELECT mt.*, COALESCE(u.nickname, mt.anon_nick) nick, u.points upts, "
+              "(SELECT COUNT(*) FROM meetup_members mm WHERE mm.meetup_id=mt.id) members "
+              "FROM meetups mt LEFT JOIN users u ON u.id=mt.user_id")
+
+
+def meetup_fields(form):
+    """개설/수정 공통 입력 검증 → dict 또는 ValueError."""
+    title, desc = form.get("title", "").strip()[:120], form.get("description", "").strip()
+    place = form.get("place", "").strip()[:100] or None
+    cap = form.get("capacity", type=int)
+    try:
+        meet_at = datetime.strptime(form.get("meet_at", ""), "%Y-%m-%dT%H:%M")
+    except ValueError:
+        raise ValueError("모임 일시를 정하셈")
+    if not title or not desc:
+        raise ValueError("제목과 설명은 필수")
+    if meet_at < now_kst():
+        raise ValueError("이미 지난 시각임")
+    if cap is not None and not (2 <= cap <= 500):
+        raise ValueError("정원은 2~500명")
+    return {"title": title, "description": desc, "place": place, "meet_at": meet_at, "capacity": cap}
+
+
+@app.get("/meetup")
+def meetup_list():
+    upcoming = m.rows(f"{MEETUP_SQL} WHERE mt.status=1 AND mt.meet_at>=NOW() ORDER BY mt.meet_at LIMIT 60")
+    past = m.rows(f"{MEETUP_SQL} WHERE mt.status=1 AND mt.meet_at<NOW() ORDER BY mt.meet_at DESC LIMIT 12")
+    return render_template("meetups.html", upcoming=upcoming, past=past)
+
+
+@app.route("/meetup/new", methods=["GET", "POST"])
+def meetup_new():
+    if request.method == "POST":
+        try:
+            f = meetup_fields(request.form)
+            a = author_fields(request.form)
+        except ValueError as e:
+            flash(str(e))
+            return render_template("meetup_form.html", mt=request.form, edit=False)
+        mid = m.run("INSERT INTO meetups(user_id, anon_nick, anon_pw_hash, title, description, place, meet_at, capacity) VALUES(%s,%s,%s,%s,%s,%s,%s,%s)",
+                    (a["user_id"], a["anon_nick"], a["anon_pw_hash"], f["title"], f["description"], f["place"], f["meet_at"], f["capacity"]))
+        if save_image(request.files.get("image"), f"m{mid}"):
+            m.run("UPDATE meetups SET has_image=1 WHERE id=%s", (mid,))
+        uid, ah = ident()  # 개설자는 자동 참여
+        m.run("INSERT IGNORE INTO meetup_members(meetup_id, user_id, anon_hash, nick) VALUES(%s,%s,%s,%s)", (mid, uid, ah, a["anon_nick"] or session["nick"]))
+        return redirect(url_for("meetup", mid=mid))
+    return render_template("meetup_form.html", mt=None, edit=False)
+
+
+@app.get("/meetup/<int:mid>")
+def meetup(mid):
+    mt = m.one(f"{MEETUP_SQL} WHERE mt.id=%s", (mid,))
+    if not mt:
+        abort(404)
+    if mt["status"] == 0:
+        return render_template("meetup.html", mt=mt, blind=True, members=[], joined=False, comments=[], can_edit=False)
+    uid, ah = ident()
+    members = m.rows("SELECT mm.*, u.points upts FROM meetup_members mm LEFT JOIN users u ON u.id=mm.user_id WHERE mm.meetup_id=%s ORDER BY mm.id", (mid,))
+    joined = any((uid and x["user_id"] == uid) or (ah and x["anon_hash"] == ah) for x in members)
+    return render_template("meetup.html", mt=mt, blind=False, members=members, joined=joined,
+                           comments=load_comments("meetup", mid), can_edit=mt["user_id"] is None or mt["user_id"] == uid,
+                           cmt_n=m.one("SELECT COUNT(*) n FROM comments WHERE target='meetup' AND target_id=%s", (mid,))["n"],
+                           full=mt["capacity"] is not None and mt["members"] >= mt["capacity"], past=mt["meet_at"] < now_kst())
+
+
+@app.post("/meetup/<int:mid>/join")
+def meetup_join(mid):
+    mt = m.one(f"{MEETUP_SQL} WHERE mt.id=%s AND mt.status=1", (mid,))
+    if not mt:
+        abort(404)
+    uid, ah = ident()
+    back = url_for("meetup", mid=mid)
+    if m.affect("DELETE FROM meetup_members WHERE meetup_id=%s AND (user_id=%s OR anon_hash=%s)", (mid, uid, ah)):
+        flash("참여 취소함")
+        return redirect(back)
+    if mt["meet_at"] < now_kst():
+        flash("이미 끝난 모임임")
+    elif mt["capacity"] is not None and mt["members"] >= mt["capacity"]:
+        flash("정원이 다 찼음")
+    else:
+        nick = session.get("nick") or request.form.get("nick", "").strip()
+        if not NICK_RE.match(nick or ""):
+            flash("참여할 닉네임을 2~12자로 적으셈")
+        else:
+            m.run("INSERT IGNORE INTO meetup_members(meetup_id, user_id, anon_hash, nick) VALUES(%s,%s,%s,%s)", (mid, uid, ah, nick))
+            flash("참여 완료")
+    return redirect(back)
+
+
+@app.route("/meetup/<int:mid>/edit", methods=["GET", "POST"])
+def meetup_edit(mid):
+    mt = m.one("SELECT * FROM meetups WHERE id=%s AND status=1", (mid,))
+    if not mt:
+        abort(404)
+    if mt["user_id"] and mt["user_id"] != session.get("uid"):
+        abort(403)
+    if request.method == "POST":
+        try:
+            if not is_owner(mt, request.form.get("pw", "")):
+                raise ValueError("비밀번호가 틀림")
+            f = meetup_fields(request.form)
+        except ValueError as e:
+            flash(str(e))
+        else:
+            m.run("UPDATE meetups SET title=%s, description=%s, place=%s, meet_at=%s, capacity=%s WHERE id=%s",
+                  (f["title"], f["description"], f["place"], f["meet_at"], f["capacity"], mid))
+            if save_image(request.files.get("image"), f"m{mid}"):
+                m.run("UPDATE meetups SET has_image=1 WHERE id=%s", (mid,))
+            return redirect(url_for("meetup", mid=mid))
+    return render_template("meetup_form.html", mt=mt, edit=True)
+
+
+@app.post("/meetup/<int:mid>/delete")
+def meetup_delete(mid):
+    mt = m.one("SELECT * FROM meetups WHERE id=%s", (mid,))
+    if not mt:
+        abort(404)
+    if not is_owner(mt, request.form.get("pw", "")):
+        return jsonify(ok=False, msg="비밀번호가 틀림"), 403
+    m.run("DELETE FROM comments WHERE target='meetup' AND target_id=%s", (mid,))
+    m.run("DELETE FROM meetups WHERE id=%s", (mid,))
+    return jsonify(ok=True, to=url_for("meetup_list"))
 
 
 # ─── 어드민 ─────────────────────────────────────────────
@@ -868,16 +1018,17 @@ def admin_blind():
     if request.method == "POST":
         target, tid = request.form.get("target"), request.form.get("target_id", type=int)
         status = request.form.get("status", type=int)
-        if target in ("post", "comment") and status in (0, 1):
-            tbl = "posts" if target == "post" else "comments"
+        if target in ("post", "comment", "meetup") and status in (0, 1):
+            tbl = {"post": "posts", "comment": "comments", "meetup": "meetups"}[target]
             m.run(f"UPDATE {tbl} SET status=%s WHERE id=%s", (status, tid))
         return redirect(url_for("admin_blind"))
     items = m.rows(
         "SELECT r.target, r.target_id, COUNT(*) n, GROUP_CONCAT(r.reason SEPARATOR ' / ') reasons, "
-        "COALESCE(p.title, c.content) txt, COALESCE(p.status, c.status) status "
+        "COALESCE(p.title, c.content, mt.title) txt, COALESCE(p.status, c.status, mt.status) status "
         "FROM reports r LEFT JOIN posts p ON r.target='post' AND p.id=r.target_id "
         "LEFT JOIN comments c ON r.target='comment' AND c.id=r.target_id "
-        "GROUP BY r.target, r.target_id, p.title, c.content, p.status, c.status ORDER BY status ASC, n DESC LIMIT 200")
+        "LEFT JOIN meetups mt ON r.target='meetup' AND mt.id=r.target_id "
+        "GROUP BY r.target, r.target_id, p.title, c.content, mt.title, p.status, c.status, mt.status ORDER BY status ASC, n DESC LIMIT 200")
     return render_template("admin/blind.html", items=items)
 
 

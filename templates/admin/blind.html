@@ -11,8 +11,8 @@
     <tr><th>대상</th><th>내용</th><th>신고</th><th>사유</th><th>상태</th><th></th></tr>
     {% for i in items %}
     <tr>
-      <td>{{ '글' if i.target == 'post' else '댓글' }} #{{ i.target_id }}</td>
-      <td>{% if i.target == 'post' %}<a href="/post/{{ i.target_id }}">{{ i.txt }}</a>{% else %}{{ (i.txt or '')[:80] }}{% endif %}</td>
+      <td>{{ {'post': '글', 'comment': '댓글', 'meetup': '모임'}[i.target] }} #{{ i.target_id }}</td>
+      <td>{% if i.target == 'post' %}<a href="/post/{{ i.target_id }}">{{ i.txt }}</a>{% elif i.target == 'meetup' %}<a href="/meetup/{{ i.target_id }}">{{ i.txt }}</a>{% else %}{{ (i.txt or '')[:80] }}{% endif %}</td>
       <td>{{ i.n }}</td>
       <td>{{ i.reasons or '' }}</td>
       <td>{{ '삭제됨' if i.status is none else ('블라인드' if i.status == 0 else '정상') }}</td>

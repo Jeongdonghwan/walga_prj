@@ -205,3 +205,27 @@ Press CTRL+C to quit
 127.0.0.1 - - [25/Oct/2026 17:55:17] "GET /static/app.js HTTP/1.1" 200 -
 127.0.0.1 - - [25/Oct/2026 17:55:18] "GET /static/uploads/3.jpg HTTP/1.1" 200 -
 127.0.0.1 - - [25/Oct/2026 17:55:19] "GET /static/favicon.ico HTTP/1.1" 200 -
+ * Detected change in 'C:\\side_Prj\\walga_prj\\app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 103-551-591
+ * Detected change in 'C:\\side_Prj\\walga_prj\\app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 103-551-591
+ * Detected change in 'C:\\side_Prj\\walga_prj\\app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 103-551-591
+ * Detected change in 'C:\\side_Prj\\walga_prj\\app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 103-551-591
+ * Detected change in 'C:\\side_Prj\\walga_prj\\app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 103-551-591
+ * Detected change in 'C:\\side_Prj\\walga_prj\\seed.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 103-551-591

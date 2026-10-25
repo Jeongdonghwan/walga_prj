@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% from "_ui.html" import ic, comment_box with context %}
+{% set nav = 'meetup' %}
+{% block title %}{{ mt.title }} — 왈가 모임{% endblock %}
+{% block mtitle %}모임{% endblock %}
+{% block head %}
+<meta name="description" content="{{ mt.meet_at|fdt }} · {{ mt.place or '장소 미정' }} · {{ mt.description[:100] }}">
+<meta property="og:title" content="{{ mt.title }}">
+{% if mt.has_image %}<meta property="og:image" content="{{ url_for('static', filename='uploads/m' ~ mt.id ~ '.jpg', _external=True) }}">{% endif %}
+{% endblock %}
+{% block body %}
+<main class="post mdetail">
+{% if blind %}
+  <div class="blindbox">신고 누적으로 블라인드된 모임임</div>
+{% else %}
+  {% set dd = mt.meet_at|dday %}
+  {% if mt.has_image %}<img class="hero" src="/static/uploads/m{{ mt.id }}.jpg" alt="">{% endif %}
+  <div class="ph">
+    <p class="cat"><span class="tag">모임</span><span class="tag {{ 'best' if dd == 'D-DAY' }}">{{ dd }}</span></p>
+    <h1>{{ mt.title }}</h1>
+    <div class="pm">
+      <span class="av c{{ mt.nick|avc }}">{{ mt.nick[0] }}</span>
+      <span class="name">{{ mt.nick }}</span>{% if mt.user_id %}<span class="lv">Lv.{{ mt.upts|lv }}</span>{% endif %}
+      <span class="dot">개설 {{ mt.created_at|ftime }}</span>
+    </div>
+  </div>
+  <dl class="minfo">
+    <div><dt>{{ ic('cal', 15) }}일시</dt><dd>{{ mt.meet_at|fdt }}</dd></div>
+    <div><dt>{{ ic('pin', 15) }}장소</dt><dd>{{ mt.place or '미정' }}</dd></div>
+    <div><dt>{{ ic('people', 15) }}인원</dt><dd>{{ mt.members }}명{% if mt.capacity %} / {{ mt.capacity }}명{% endif %}</dd></div>
+  </dl>
+  <div class="pc"><p>{{ mt.description|nl2br }}</p></div>
+  <div class="pa">
+    <form class="joinf" method="post" action="/meetup/{{ mt.id }}/join">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      {% if joined %}<span class="joined">{{ ic('check', 14) }}참여 중</span><button class="btn ghost">참여 취소</button>
+      {% elif past %}<span class="joined over">끝난 모임</span>
+      {% elif full %}<span class="joined over">정원 마감</span>
+      {% else %}{% if not nick %}<input name="nick" placeholder="참여 닉네임" maxlength="12" required>{% endif %}<button class="btn">참여하기</button>{% endif %}
+    </form>
+    <span class="tools">
+      <button data-report="meetup" data-id="{{ mt.id }}">신고</button>
+      {% if can_edit %}<a href="/meetup/{{ mt.id }}/edit">수정</a><button data-del="/meetup/{{ mt.id }}/delete" data-anon="{{ 0 if mt.user_id else 1 }}">삭제</button>{% endif %}
+      <a href="/meetup">목록</a>
+    </span>
+  </div>
+
+  <div class="sh"><h2>참여자 <span class="n">{{ members|length }}</span></h2></div>
+  <ul class="mmembers">
+    {% for x in members %}<li><span class="av c{{ x.nick|avc }}">{{ x.nick[0] }}</span>{{ x.nick }}{% if x.nick == mt.nick %}<span class="hostmark">모임장</span>{% endif %}</li>
+    {% else %}<li class="empty">아직 아무도 없음</li>{% endfor %}
+  </ul>
+
+  <div class="sh"><h2>댓글 <span class="n">{{ cmt_n }}</span></h2></div>
+  {{ comment_box('meetup', mt.id, comments) }}
+{% endif %}
+</main>
+{% endblock %}

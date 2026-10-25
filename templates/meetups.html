@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% from "_meetup.html" import mgrid with context %}
+{% set nav = 'meetup' %}
+{% block title %}모임 — 왈가{% endblock %}
+{% block mtitle %}모임{% endblock %}
+{% block body %}
+<main>
+  <div class="sh"><h2>다가오는 모임</h2><span class="date">일시 빠른 순</span><a class="btn sm" href="/meetup/new">모임 만들기</a></div>
+  {{ mgrid(upcoming, '아직 모임이 없음. 첫 모임 열어보셈') }}
+  {% if past %}
+  <div class="sh"><h2>지난 모임</h2></div>
+  {{ mgrid(past) }}
+  {% endif %}
+</main>
+{% endblock %}

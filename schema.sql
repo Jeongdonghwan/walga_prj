@@ -65,7 +65,7 @@ CREATE TABLE IF NOT EXISTS posts (
 
 CREATE TABLE IF NOT EXISTS comments (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  target ENUM('post','issue') NOT NULL,
+  target ENUM('post','issue','meetup') NOT NULL,
   target_id INT NOT NULL,
   parent_id INT NULL,
   user_id INT NULL,
@@ -91,7 +91,7 @@ CREATE TABLE IF NOT EXISTS recommends (
 
 CREATE TABLE IF NOT EXISTS reports (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  target ENUM('post','comment') NOT NULL,
+  target ENUM('post','comment','meetup') NOT NULL,
   target_id INT NOT NULL,
   reason VARCHAR(50),
   reporter_hash VARCHAR(64) NOT NULL,
@@ -116,4 +116,32 @@ CREATE TABLE IF NOT EXISTS news (
   pinned TINYINT NOT NULL DEFAULT 0,            -- 운영진 고정 (상단)
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   UNIQUE KEY uq_url (url(191))
+) CHARACTER SET utf8mb4;
+
+CREATE TABLE IF NOT EXISTS meetups (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NULL,
+  anon_nick VARCHAR(20) NULL,
+  anon_pw_hash VARCHAR(255) NULL,
+  title VARCHAR(120) NOT NULL,
+  description TEXT NOT NULL,
+  place VARCHAR(100) NULL,
+  meet_at DATETIME NOT NULL,                    -- 모임 일시
+  capacity INT NULL,                            -- 정원 (NULL=무제한)
+  has_image TINYINT NOT NULL DEFAULT 0,         -- static/uploads/m<id>.jpg
+  status TINYINT NOT NULL DEFAULT 1,            -- 0=블라인드
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_meet (status, meet_at)
+) CHARACTER SET utf8mb4;
+
+CREATE TABLE IF NOT EXISTS meetup_members (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  meetup_id INT NOT NULL,
+  user_id INT NULL,
+  anon_hash VARCHAR(64) NULL,
+  nick VARCHAR(20) NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_user (meetup_id, user_id),
+  UNIQUE KEY uq_anon (meetup_id, anon_hash),
+  FOREIGN KEY (meetup_id) REFERENCES meetups(id) ON DELETE CASCADE
 ) CHARACTER SET utf8mb4;
