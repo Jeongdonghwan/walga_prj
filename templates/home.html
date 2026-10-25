@@ -36,6 +36,15 @@
   </ul>
   {% endif %}
 
+  {% if news %}
+  <div class="sh"><h2>뉴스</h2><span class="date">투표할 만한 거 있으면 이슈로 올라감</span><a class="more" href="/news">더보기</a></div>
+  <ul class="news">
+    {% for n in news %}
+    <li><a href="{{ n.url }}" target="_blank" rel="noopener"><span class="src">{{ n.source or '뉴스' }}</span><span class="txt">{{ n.title }}</span>{% if n.pinned %}<span class="pin">운영진 픽</span>{% endif %}<span class="time">{{ n.created_at|ftime }}</span></a></li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+
   <div class="m-only">
     {{ ad('ad-infeed', '인피드 광고 · 320×100') }}
     <div class="sh"><h2>왈가베스트</h2><a class="more" href="/best">더보기</a></div>

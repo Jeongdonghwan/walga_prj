@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% set nav = 'admin' %}
+{% block title %}뉴스 관리 — 왈가{% endblock %}
+{% block mtitle %}뉴스 관리{% endblock %}
+{% block body %}
+<main class="form admin-page">
+  <div class="atabs"><a href="/admin/issues">이슈 관리</a><a class="on" href="/admin/news">뉴스 관리</a><a href="/admin/blind">신고 관리</a></div>
+
+  <form method="post" action="/admin/news/fetch" class="genrow">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div><b>뉴스 자동 수집</b><small>Google News 한국 RSS(종합·사회·경제) 상위 20건. 같은 링크는 건너뜀. cron: 3시간마다 <code>flask --app app fetch-news</code></small></div>
+    <button class="btn">지금 가져오기</button>
+  </form>
+
+  <div class="sh"><h2>직접 올리기</h2></div>
+  <form method="post" action="/admin/news">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input name="title" placeholder="제목" maxlength="200" required>
+    <div class="anon">
+      <input name="url" type="url" placeholder="링크 (https://…)" maxlength="500" required>
+      <input name="source" placeholder="매체명 (선택)" maxlength="50">
+    </div>
+    <div class="checks"><label><input type="checkbox" name="pinned" checked> 운영진 픽 (상단 고정)</label></div>
+    <div class="actions"><button class="btn">등록</button></div>
+  </form>
+
+  <div class="sh"><h2>뉴스 목록</h2><span class="date">최근 100개</span></div>
+  <table class="admin">
+    <tr><th>시간</th><th>매체</th><th>제목</th><th></th></tr>
+    {% for n in items %}
+    <tr>
+      <td>{{ n.created_at|ftime }}</td>
+      <td>{{ n.source or '-' }}</td>
+      <td><a href="{{ n.url }}" target="_blank" rel="noopener">{{ n.title }}</a>{% if n.pinned %} <span class="tag best">픽</span>{% endif %}</td>
+      <td class="acts">
+        <a href="/admin/issues?title={{ n.title|urlencode }}">이슈로</a>
+        <form method="post" action="/admin/news/{{ n.id }}/pin"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button>{{ '픽 해제' if n.pinned else '픽' }}</button></form>
+        <form method="post" action="/admin/news/{{ n.id }}/delete"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button>삭제</button></form>
+      </td>
+    </tr>
+    {% else %}<tr><td colspan="4">뉴스 없음</td></tr>{% endfor %}
+  </table>
+</main>
+{% endblock %}

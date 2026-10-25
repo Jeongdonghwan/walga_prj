@@ -32,19 +32,36 @@ SYSTEM = """너는 한국 커뮤니티 '왈가'의 이슈 에디터다. 왈가�
 USER = "오늘 헤드라인 {n}개:\n{lines}\n\n위 규칙대로 JSON만 출력."
 
 
-def fetch_headlines(limit=40):
+def parse_rss(xml_bytes):
+    """RSS → [{title, url, source}]. 제목 끝의 ' - 매체명'은 떼고 source로."""
+    out = []
+    for item in ET.fromstring(xml_bytes).iter("item"):
+        raw = (item.findtext("title") or "").strip()
+        link = (item.findtext("link") or "").strip()
+        src = (item.findtext("source") or "").strip()
+        mt = re.match(r"^(.*)\s+-\s+([^-]+)$", raw)
+        title = mt.group(1).strip() if mt else raw
+        if title and link:
+            out.append({"title": title[:200], "url": link[:500], "source": (src or (mt.group(2).strip() if mt else ""))[:50] or None})
+    return out
+
+
+def fetch_news(limit=30):
     seen, out = set(), []
     for url in FEEDS:
         try:
             r = requests.get(url, timeout=10, headers={"User-Agent": "walga/1.0"})
-            for item in ET.fromstring(r.content).iter("item"):
-                t = re.sub(r"\s*-\s*[^-]+$", "", (item.findtext("title") or "").strip())  # 끝의 매체명 제거
-                if t and t not in seen:
-                    seen.add(t)
-                    out.append(t)
+            for n in parse_rss(r.content):
+                if n["title"] not in seen:
+                    seen.add(n["title"])
+                    out.append(n)
         except Exception:
             continue
     return out[:limit]
+
+
+def fetch_headlines(limit=40):
+    return [n["title"] for n in fetch_news(limit)]
 
 
 def parse_issues(text):

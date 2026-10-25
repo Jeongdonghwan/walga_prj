@@ -150,6 +150,22 @@ mn, iss = issue_gen.parse_issues('```json\n{"main": {"title": "축의금 5만원
                                  '"issues": [{"title": "t1"}, {"title": "t2", "opt_yes": ""}]}\n```')
 assert mn["opt_yes"] == "충분" and iss[1]["opt_yes"] == "찬성" and len(iss) == 2
 
+# 14. 뉴스: RSS 파서, 어드민 등록·픽·삭제, 홈·목록 노출, 이슈 프리필
+rss = b'<rss><channel><item><title>A - Daily</title><link>https://x.test/a</link><source url="u">Daily</source></item><item><title>B</title><link>https://x.test/b</link></item><item><title>No link</title></item></channel></rss>'
+parsed = issue_gen.parse_rss(rss)
+assert len(parsed) == 2 and parsed[0] == {"title": "A", "url": "https://x.test/a", "source": "Daily"} and parsed[1]["source"] is None
+anon.post("/admin/news", headers=auth, data={"title": "뉴스 하나", "url": "https://news.test/1", "source": "매체", "pinned": "on"})
+anon.post("/admin/news", headers=auth, data={"title": "주소 없음", "url": "ftp://bad"})
+assert db("SELECT COUNT(*), SUM(pinned) FROM news") == (1, 1)
+html = anon.get("/").get_data(as_text=True)
+assert "뉴스 하나" in html and "운영진 픽" in html and 'target="_blank"' in html
+assert "뉴스 하나" in anon.get("/news").get_data(as_text=True)
+assert 'value="뉴스 하나"' in anon.get("/admin/issues?title=뉴스 하나", headers=auth).get_data(as_text=True)
+anon.post("/admin/news/1/pin", headers=auth)
+assert db("SELECT pinned FROM news WHERE id=1")[0] == 0
+anon.post("/admin/news/1/delete", headers=auth)
+assert db("SELECT COUNT(*) FROM news")[0] == 0
+
 # 8. 삭제: 비밀번호 틀림 403, 맞으면 삭제 / 회원 글은 본인만
 assert anon.post("/comment/1/delete", data={"pw": "9999"}).status_code == 403
 assert anon.post("/comment/1/delete", data={"pw": "0000"}).get_json()["ok"]

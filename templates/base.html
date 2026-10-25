@@ -38,6 +38,7 @@
     <a href="/" class="{{ 'on' if nav == 'home' }}">홈</a>
     <a href="/issue" class="{{ 'on' if nav == 'issue' }}">이슈</a>
     <a href="/best" class="{{ 'on' if nav == 'best' }}">왈베</a>
+    <a href="/news" class="{{ 'on' if nav == 'news' }}">뉴스</a>
     <span class="div"></span>
     {% for k, l in BOARDS.items() %}<a href="/board/{{ k }}" class="{{ 'on' if nav == k }}">{{ l }}</a>{% endfor %}
     <a class="write" href="/write?board={{ nav if nav in BOARDS else 'free' }}">글쓰기</a>

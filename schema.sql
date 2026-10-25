@@ -106,3 +106,13 @@ CREATE TABLE IF NOT EXISTS attendance (
   UNIQUE KEY uq_day (user_id, date),
   FOREIGN KEY (user_id) REFERENCES users(id)
 ) CHARACTER SET utf8mb4;
+
+CREATE TABLE IF NOT EXISTS news (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  title VARCHAR(200) NOT NULL,
+  url VARCHAR(500) NOT NULL,
+  source VARCHAR(50) NULL,                      -- 매체명
+  pinned TINYINT NOT NULL DEFAULT 0,            -- 운영진 고정 (상단)
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_url (url(191))
+) CHARACTER SET utf8mb4;

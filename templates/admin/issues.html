@@ -4,7 +4,7 @@
 {% block mtitle %}이슈 관리{% endblock %}
 {% block body %}
 <main class="form admin-page">
-  <div class="atabs"><a class="on" href="/admin/issues">이슈 관리</a><a href="/admin/blind">신고 관리</a></div>
+  <div class="atabs"><a class="on" href="/admin/issues">이슈 관리</a><a href="/admin/news">뉴스 관리</a><a href="/admin/blind">신고 관리</a></div>
 
   <form method="post" action="/admin/issues/generate" class="genrow">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

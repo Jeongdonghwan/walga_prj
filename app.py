@@ -281,6 +281,21 @@ def cli_gen_issues():
     print(gen_issues_today())
 
 
+def fetch_news_now(limit=20):
+    """RSS 헤드라인을 news 테이블에 적재. URL 중복은 DB UNIQ로 건너뜀."""
+    import issue_gen
+    n = 0
+    for it in issue_gen.fetch_news(limit):
+        n += m.affect("INSERT IGNORE INTO news(title, url, source) VALUES(%s,%s,%s)", (it["title"], it["url"], it["source"]))
+    return f"뉴스 {n}건 추가"
+
+
+@app.cli.command("fetch-news")
+def cli_fetch_news():
+    """cron용: 0 */3 * * * cd /var/www/walga && ./venv/bin/flask --app app fetch-news"""
+    print(fetch_news_now())
+
+
 def my_vote(iid):
     uid, ah = ident()
     v = m.one("SELECT choice FROM votes WHERE issue_id=%s AND (user_id=%s OR anon_hash=%s)", (iid, uid, ah))
@@ -303,6 +318,7 @@ def home():
     main_voted = my_vote(main_issue["id"]) if main_issue else None
     best = m.rows(f"{POST_SQL} WHERE p.is_best=1 AND p.status=1 ORDER BY p.best_at DESC, p.id DESC LIMIT 5")
     free = m.rows(f"{POST_SQL} WHERE p.board='free' AND p.status=1 ORDER BY p.id DESC LIMIT 5")
+    news = m.rows("SELECT * FROM news ORDER BY pinned DESC, id DESC LIMIT 8")
     sort = request.args.get("sort", "new")
     total = m.one("SELECT COUNT(*) n FROM posts WHERE status=1")["n"]
     page, off, pages = paging(total)
@@ -310,7 +326,7 @@ def home():
                    (app.config["PER_PAGE"], off))
     user = m.one("SELECT *, DATEDIFF(CURDATE(), created_at)+1 days FROM users WHERE id=%s", (session["uid"],)) if session.get("uid") else None
     return render_template("home.html", main_issue=main_issue, main_voted=main_voted, issues=issues, results=results,
-                           best=best, free=free, posts=posts, sort=sort, page=page, pages=pages, user=user,
+                           best=best, free=free, news=news, posts=posts, sort=sort, page=page, pages=pages, user=user,
                            today_label=f"{today.month}월 {today.day}일", y_label=f"{yday.month}월 {yday.day}일")
 
 
@@ -447,6 +463,16 @@ def login():
 def logout():
     session.clear()
     return redirect(url_for("home"))
+
+
+# ─── 뉴스 ───────────────────────────────────────────────
+
+@app.get("/news")
+def news_list():
+    total = m.one("SELECT COUNT(*) n FROM news")["n"]
+    page, off, pages = paging(total)
+    items = m.rows("SELECT * FROM news ORDER BY pinned DESC, id DESC LIMIT %s OFFSET %s", (app.config["PER_PAGE"], off))
+    return render_template("news.html", items=items, page=page, pages=pages)
 
 
 # ─── 마이 · 검색 ─────────────────────────────────────────
@@ -739,8 +765,46 @@ def admin_issues():
         return redirect(url_for("admin_issues"))
     edit_id = request.args.get("edit", type=int)
     edit = m.one("SELECT * FROM issues WHERE id=%s", (edit_id,)) if edit_id else None
+    if not edit and request.args.get("title"):  # 뉴스 → 이슈 등록 프리필
+        edit = {"id": None, "title": request.args.get("title", "")[:200], "summary": "", "category": None,
+                "is_main": 0, "opt_yes": "", "opt_no": "", "open_date": now_kst().date(), "approved": 1}
     issues = m.rows("SELECT *, yes_cnt+no_cnt part FROM issues ORDER BY open_date DESC, is_main DESC, id DESC LIMIT 60")
     return render_template("admin/issues.html", issues=issues, edit=edit, today=now_kst().date())
+
+
+@app.route("/admin/news", methods=["GET", "POST"])
+@admin_required
+def admin_news():
+    if request.method == "POST":
+        title, url_ = request.form.get("title", "").strip()[:200], request.form.get("url", "").strip()[:500]
+        if title and url_.startswith("http"):
+            m.run("INSERT IGNORE INTO news(title, url, source, pinned) VALUES(%s,%s,%s,%s)",
+                  (title, url_, request.form.get("source", "").strip()[:50] or None, 1 if request.form.get("pinned") else 0))
+        else:
+            flash("제목과 http로 시작하는 링크가 필요함")
+        return redirect(url_for("admin_news"))
+    items = m.rows("SELECT * FROM news ORDER BY pinned DESC, id DESC LIMIT 100")
+    return render_template("admin/news.html", items=items)
+
+
+@app.post("/admin/news/fetch")
+@admin_required
+def admin_news_fetch():
+    try:
+        flash(fetch_news_now())
+    except Exception as e:
+        flash(f"뉴스 수집 실패: {e}")
+    return redirect(url_for("admin_news"))
+
+
+@app.post("/admin/news/<int:nid>/<action>")
+@admin_required
+def admin_news_action(nid, action):
+    if action == "delete":
+        m.run("DELETE FROM news WHERE id=%s", (nid,))
+    elif action == "pin":
+        m.run("UPDATE news SET pinned=1-pinned WHERE id=%s", (nid,))
+    return redirect(url_for("admin_news"))
 
 
 @app.post("/admin/issues/generate")
