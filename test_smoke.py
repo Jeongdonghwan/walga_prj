@@ -151,7 +151,7 @@ mn, iss = issue_gen.parse_issues('```json\n{"main": {"title": "축의금 5만원
 assert mn["opt_yes"] == "충분" and iss[1]["opt_yes"] == "찬성" and len(iss) == 2
 
 # 14. 뉴스: RSS 파서, 어드민 등록·픽·삭제, 홈·목록 노출, 이슈 프리필
-rss = b'<rss xmlns:media="http://search.yahoo.com/mrss/"><channel><item><title> 가나다라마바사아 A </title><link>https://x.test/a</link><media:content url="https://x.test/a.jpg" type="image/jpeg"/></item><item><title>가나다라마바사 B</title><link>https://x.test/b</link><description><![CDATA[<p><img src="https://x.test/b.png"></p>]]></description></item><item><title>No link</title></item><item><title>클로징</title><link>https://x.test/c</link></item></channel></rss>'
+rss = '<rss xmlns:media="http://search.yahoo.com/mrss/"><channel><item><title> 가나다라마바사아 A </title><link>https://x.test/a</link><media:content url="https://x.test/a.jpg" type="image/jpeg"/></item><item><title>가나다라마바사 B</title><link>https://x.test/b</link><description><![CDATA[<p><img src="https://x.test/b.png"></p>]]></description></item><item><title>No link</title></item><item><title>클로징</title><link>https://x.test/c</link></item></channel></rss>'.encode()
 parsed = issue_gen.parse_rss(rss, "매체")
 assert len(parsed) == 2 and parsed[0] == {"title": "가나다라마바사아 A", "url": "https://x.test/a", "source": "매체", "image": "https://x.test/a.jpg"} and parsed[1]["image"] == "https://x.test/b.png"
 assert issue_gen.og_image("http://127.0.0.1:9/none") is None

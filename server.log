@@ -116,3 +116,7 @@ Press CTRL+C to quit
 127.0.0.1 - - [25/Oct/2026 17:43:10] "GET /news HTTP/1.1" 200 -
 127.0.0.1 - - [25/Oct/2026 17:43:10] "GET /static/style.css HTTP/1.1" 200 -
 127.0.0.1 - - [25/Oct/2026 17:43:10] "GET /static/app.js HTTP/1.1" 200 -
+ * Detected change in 'C:\\side_Prj\\walga_prj\\test_smoke.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 103-551-591
