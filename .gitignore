@@ -6,3 +6,4 @@ static/uploads/*
 static/cache/
 static/cards/*
 !static/cards/.gitkeep
+server.log
