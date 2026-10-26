@@ -20,7 +20,16 @@
     {% endfor %}
   </ul>
   {% endif %}
+  {% if posts or issues %}
   {{ rows(posts, cat='board', ad_after=0) }}
+  {% if tag %}<p class="tagwrite-sm"><a href="/write?board=free&tag={{ tag|urlencode }}">#{{ tag }} 태그로 글 쓰기 ›</a></p>{% endif %}
+  {% else %}
+  <div class="tagwrite">
+    <p class="tw-t">"{{ q }}" 관련 글이 아직 없음</p>
+    <p class="tw-s">첫 글 써보셈. 키워드가 해시태그로 들어감</p>
+    {% if tag %}<a class="btn" href="/write?board=free&tag={{ tag|urlencode }}">#{{ tag }} 태그로 글쓰기</a>{% endif %}
+  </div>
+  {% endif %}
   {% endif %}
 </main>
 {% endblock %}

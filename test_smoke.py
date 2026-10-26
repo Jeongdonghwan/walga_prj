@@ -93,7 +93,11 @@ assert "토론에 참여할 수 있음" in html and "%" not in html.split('<main
 
 # 8. 투표: 중복 차단, 투표 후 댓글 허용, 홈 '투표 완료' 상태, 집계 비공개 유지 (핵심 규칙 1)
 assert anon.post("/vote", data={"issue_id": 1, "choice": 1}).status_code == 302
-assert "이미 투표함" in anon.post("/vote", data={"issue_id": 1, "choice": 0}, follow_redirects=True).get_data(as_text=True)
+assert "다시 투표하기" in anon.get("/issue/1/issue-1").get_data(as_text=True)
+assert "바꿨음" in anon.post("/vote", data={"issue_id": 1, "choice": 0}, follow_redirects=True).get_data(as_text=True)
+assert db("SELECT yes_cnt, no_cnt FROM issues WHERE id=1") == (0, 1) and db("SELECT COUNT(*) FROM votes")[0] == 1
+assert "바꿨음" in anon.post("/vote", data={"issue_id": 1, "choice": 1}, follow_redirects=True).get_data(as_text=True)
+assert "이미 그쪽에" in anon.post("/vote", data={"issue_id": 1, "choice": 1}, follow_redirects=True).get_data(as_text=True)
 assert anon.post("/comment", data={"target": "issue", "target_id": 1, "content": "토론", "nick": "a", "pw": "1234"}).status_code == 302
 html = anon.get("/issue/1/issue-1").get_data(as_text=True)
 assert "투표 완료" in html and "토론" in html and "%" not in html.split('class="vbox"')[1].split('</div>')[0]
@@ -135,6 +139,11 @@ assert A.app.test_client().post("/login", data={"nickname": "tester", "password"
 html = anon.get("/search?q=테스트").get_data(as_text=True)
 assert "테스트글" in html and "검색 결과" in html
 assert "두 글자" in anon.get("/search?q=a").get_data(as_text=True)
+html = anon.get("/search?q=없는키워드").get_data(as_text=True)
+assert "관련 글이 아직 없음" in html and "/write?board=free&tag=%EC%97%86%EB%8A%94%ED%82%A4%EC%9B%8C%EB%93%9C" in html
+html = anon.get("/write?board=free&tag=한강 러닝!").get_data(as_text=True)
+assert "#한강러닝" in html, "태그 정리 후 본문 프리필"
+assert '<a class="htag" href="/search?q=%23러닝">#러닝</a>' in str(A.nl2br("오늘 #러닝 함")) and "htag" not in str(A.nl2br("it's"))
 assert "/issue/1/issue-1" in anon.get("/sitemap.xml").get_data(as_text=True)
 assert "Sitemap:" in anon.get("/robots.txt").get_data(as_text=True)
 assert os.path.exists(os.path.join(A.CARD_DIR, "1.png")), "마감 시 결과 카드 생성"

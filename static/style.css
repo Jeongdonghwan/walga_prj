@@ -157,6 +157,16 @@ ul{list-style:none}
 .vbox .vm .miss{color:var(--hot)}
 .issue .sh{margin-top:26px}
 .issue .sh .n{color:var(--brand)}
+.revote{margin-top:8px}
+.revote button{font-size:12.5px;color:var(--sub);text-decoration:underline;text-underline-offset:2px}
+.revote button:hover{color:var(--text)}
+.htag{color:var(--brand);font-weight:600}
+.htag:hover{text-decoration:underline}
+.tagwrite{display:flex;flex-direction:column;align-items:center;gap:6px;padding:36px 16px;margin-top:8px;background:var(--surface);border-radius:8px;text-align:center}
+.tagwrite .tw-t{font-size:15px;font-weight:700}
+.tagwrite .tw-s{font-size:13px;color:var(--sub);margin-bottom:8px}
+.tagwrite-sm{padding:12px 2px;font-size:13px}
+.tagwrite-sm a{color:var(--brand);font-weight:700}
 .lockbox{display:flex;align-items:center;justify-content:center;gap:8px;padding:16px;margin-top:12px;background:var(--surface);border-radius:6px;font-size:13.5px;color:var(--sub)}
 
 /* ─── 뉴스 (갤러리) ─── */
@@ -245,6 +255,7 @@ ul{list-style:none}
 .pwform input:focus{border-color:var(--brand)}
 .pwform .btn{height:42px;flex:none}
 .searchpg .search{margin:12px 16px}
+.searchpg .search.m-only{display:none}
 
 /* ─── 어드민 ─── */
 .atabs{display:flex;gap:0;margin-bottom:16px;border-bottom:1px solid var(--line2)}
@@ -513,6 +524,8 @@ ul{list-style:none}
   .anon.wrap3{flex-direction:column}
   .joinf{flex-wrap:wrap}
   .joinf input{flex:1;width:auto;min-width:0}
+  .searchpg .search.m-only{display:flex}
+  .searchpg .tagwrite{margin:8px 16px 0}
   .my{padding:0 16px}
   .my .card.profile{margin-top:14px}
   .my .sh,.my .rows li{padding-left:0;padding-right:0}

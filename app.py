@@ -139,9 +139,13 @@ def dday(dt):
     return "D-DAY" if d == 0 else (f"D-{d}" if d > 0 else "종료")
 
 
+TAG_RE = re.compile(r"(?<![&\w])#([가-힣A-Za-z0-9_]{1,20})")
+
+
 @app.template_filter("nl2br")
 def nl2br(s):
-    return Markup("<br>").join(escape(s or "").split("\n"))
+    html = str(Markup("<br>").join(escape(s or "").split("\n")))
+    return Markup(TAG_RE.sub(lambda mt: f'<a class="htag" href="/search?q=%23{mt.group(1)}">#{mt.group(1)}</a>', html))
 
 
 @app.template_filter("ftime")
@@ -453,6 +457,15 @@ def vote():
         flash("마감된 이슈임")
         return redirect(back)
     uid, ah = ident()
+    old = m.one("SELECT id, choice FROM votes WHERE issue_id=%s AND (user_id=%s OR anon_hash=%s)", (iid, uid, ah))
+    if old:  # 다시 투표하기: 마감 전까지 반대쪽으로 변경 가능
+        if old["choice"] == choice:
+            flash("이미 그쪽에 투표함")
+        elif m.affect("UPDATE votes SET choice=%s WHERE id=%s AND choice=%s", (choice, old["id"], old["choice"])):
+            new, prev = ("yes_cnt", "no_cnt") if choice else ("no_cnt", "yes_cnt")
+            m.run(f"UPDATE issues SET {new}={new}+1, {prev}=GREATEST({prev}-1,0) WHERE id=%s", (iid,))
+            flash("투표를 바꿨음. 결과는 밤 11시 59분에 공개됨")
+        return redirect(back)
     try:
         m.run("INSERT INTO votes(issue_id, user_id, anon_hash, choice) VALUES(%s,%s,%s,%s)", (iid, uid, ah, choice))
     except pymysql.err.IntegrityError:
@@ -577,7 +590,7 @@ def search():
             else:
                 i["part"] = i["yes_cnt"] + i["no_cnt"]
                 i["yes_cnt"] = i["no_cnt"] = None
-    return render_template("search.html", q=q, posts=posts, issues=issues)
+    return render_template("search.html", q=q, posts=posts, issues=issues, tag=re.sub(r"[^\w가-힣]", "", q)[:20])
 
 
 # ─── 게시판 ─────────────────────────────────────────────
@@ -649,7 +662,9 @@ def write():
         if save_image(request.files.get("image"), pid):
             m.run("UPDATE posts SET has_image=1 WHERE id=%s", (pid,))
         return redirect(url_for("post", pid=pid))
-    return render_template("write.html", board=board, p=None, edit=False)
+    tag = re.sub(r"[^\w가-힣]", "", request.args.get("tag", ""))[:20]
+    prefill = {"title": "", "content": f"\n\n#{tag}"} if tag else None
+    return render_template("write.html", board=board, p=prefill, edit=False, tag=tag)
 
 
 @app.route("/post/<int:pid>/edit", methods=["GET", "POST"])
